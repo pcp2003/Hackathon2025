@@ -1,11 +1,29 @@
-version: '3.9'
-
 services:
+  # Frontend Service - React + Vite + Nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: naviacess-frontend
+    ports:
+      - "3000:80"
+    networks:
+      - naviacess-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - backend
+
   # Backend Service - FastAPI
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: naviacess-backend
     ports:
       - "8000:8000"

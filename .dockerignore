@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Python
+__pycache__
+.pytest_cache
+.venv
+*.pyc
+*.pyo
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist
+build
+*.egg-info
+
+# Tests
+coverage
+.nyc_output
+
+# Docs
+docs
+.github
+README.md
+DOCKER.md
+
+# Setup scripts
+setup.sh
+setup.bat
+setup-osrm.sh
+setup-osrm.bat
+
+# Keep nginx configs
+!frontend/nginx.conf
+!backend/requirements.txt
