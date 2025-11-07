@@ -12,12 +12,15 @@ from main import app
 
 client = TestClient(app)
 
+
 def test_health_check():
     """Test health check endpoint returns success"""
     response = client.get("/api/health")
     assert response.status_code == 200
-    assert response.json()["status"] == "healthy"
-    assert "version" in response.json()
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert "version" in data
+
 
 def test_health_check_response_format():
     """Test health check response has correct format"""

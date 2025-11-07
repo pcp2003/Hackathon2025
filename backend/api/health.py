@@ -2,13 +2,10 @@
 Health check endpoints
 """
 from fastapi import APIRouter
-from pydantic import BaseModel
+from schemas.health import HealthResponse
 
-router = APIRouter()
+router = APIRouter(prefix="/api", tags=["health"])
 
-class HealthResponse(BaseModel):
-    status: str
-    version: str
 
 @router.get("/health", response_model=HealthResponse)
 async def health_check():

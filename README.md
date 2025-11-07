@@ -56,43 +56,53 @@ NaviAcess is an AI-powered voice navigation assistant that empowers visually imp
 ```
 NaviAcess/
 ├── backend/
-│   ├── routes/              # API endpoints
-│   │   ├── health.py        # Health check
-│   │   └── navigation.py    # Navigation endpoints
-│   ├── services/            # External integrations
-│   │   ├── transcription.py # ElevenLabs STT
-│   │   ├── nlp.py           # Destination extraction
-│   │   ├── routing.py       # OSRM routing
-│   │   └── text_to_speech.py# ElevenLabs TTS
-│   ├── utils/               # Helper functions
-│   │   └── helpers.py       # Distance calculations
-│   ├── tests/               # Unit tests
-│   ├── main.py              # FastAPI application
-│   ├── requirements.txt     # Python dependencies
-│   └── .env.example         # Environment template
+│   ├── api/                     # ✨ API endpoints (simplified)
+│   │   ├── __init__.py          # Router exports
+│   │   ├── health.py            # Health check endpoint
+│   │   └── navigation.py        # Navigation endpoints (5 endpoints)
+│   ├── schemas/                 # 📊 Request/Response models (Pydantic)
+│   │   ├── __init__.py
+│   │   ├── common.py            # Common response models
+│   │   ├── health.py            # Health schemas
+│   │   └── navigation.py        # Navigation schemas
+│   ├── services/                # 🔌 External integrations
+│   │   ├── transcription.py     # ElevenLabs STT
+│   │   ├── nlp.py               # OpenAI NLP
+│   │   ├── routing.py           # OSRM routing
+│   │   └── text_to_speech.py    # ElevenLabs TTS
+│   ├── utils/                   # 🛠️ Helper functions
+│   │   ├── helpers.py           # Utility functions
+│   │   └── __init__.py
+│   ├── tests/                   # ✅ Unit tests
+│   │   ├── test_health.py
+│   │   ├── test_navigation.py
+│   │   ├── test_helpers.py
+│   │   └── __init__.py
+│   ├── main.py                  # FastAPI application
+│   ├── requirements.txt         # Python dependencies
+│   └── .env.example             # Environment template
 │
-├── frontend/
+├── frontend/                    # React + Vite application
 │   ├── src/
-│   │   ├── components/      # UI components
-│   │   │   ├── VoiceInput.jsx
-│   │   │   ├── Map.jsx
-│   │   │   └── RouteDisplay.jsx
-│   │   ├── services/        # API & location services
-│   │   │   ├── apiClient.js
-│   │   │   ├── locationService.js
-│   │   │   └── audioService.js
-│   │   ├── pages/           # App screens
-│   │   │   └── App.jsx
-│   │   ├── tests/           # Component tests
-│   │   ├── main.jsx         # React entry point
-│   │   └── index.css        # Global styles
-│   ├── index.html           # HTML entry point
-│   ├── package.json         # Node dependencies
-│   ├── vite.config.js       # Vite configuration
-│   ├── vitest.config.js     # Test configuration
-│   └── .env.example         # Environment template
+│   │   ├── components/          # UI components
+│   │   ├── services/            # API clients
+│   │   ├── pages/               # App screens
+│   │   ├── tests/               # Component tests
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   └── .env.example
 │
-└── README.md               # This file
+├── docs/                        # 📝 Commit documentation
+│   └── commit-YYYY-MM-DD-*.md
+│
+├── README.md                    # Project overview and setup
+├── .gitignore
+├── setup.sh / setup.bat         # Setup scripts
+└── github/
+    └── agentInstructions.md
 ```
 
 ## 🚀 Quick Start
@@ -170,6 +180,8 @@ NaviAcess/
 
 ## 📡 API Endpoints
 
+All endpoints are under `/api/` prefix for clean organization.
+
 ### Health Check
 ```
 GET /api/health
@@ -222,7 +234,7 @@ Body: FormData {
   destination_lat: float,
   destination_lon: float 
 }
-Response: { on_route: bool, needs_recalculation: bool }
+Response: { on_route: bool, needs_recalculation: bool, message: string }
 ```
 
 ## ✅ Testing
