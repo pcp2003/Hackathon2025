@@ -10,7 +10,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from main import app
 
-client = TestClient(app)
+
+@pytest.fixture
+def client():
+    """Create a test client for the app"""
+    return TestClient(app)
 
 
 def test_health_check(client):
