@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+  # Backend Service - FastAPI
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: naviacess-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - API_ENV=development
+    volumes:
+      - ./backend:/app
+    networks:
+      - naviacess-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+networks:
+  naviacess-network:
+    driver: bridge
