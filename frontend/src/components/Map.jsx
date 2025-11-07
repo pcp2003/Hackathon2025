@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import './Map.css';
+import { MAP_CONFIG } from '../utils/constants';
 
 export const Map = ({ destination, currentLocation, route }) => {
   const mapRef = useRef(null);
@@ -11,10 +11,13 @@ export const Map = ({ destination, currentLocation, route }) => {
 
     // Initialize map
     if (!mapInstanceRef.current) {
-      mapInstanceRef.current = L.map(mapRef.current).setView([40.7128, -74.0060], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19,
+      mapInstanceRef.current = L.map(mapRef.current).setView(
+        MAP_CONFIG.DEFAULT_CENTER,
+        MAP_CONFIG.DEFAULT_ZOOM
+      );
+      L.tileLayer(MAP_CONFIG.TILE_LAYER, {
+        attribution: MAP_CONFIG.TILE_ATTRIBUTION,
+        maxZoom: MAP_CONFIG.MAX_ZOOM,
       }).addTo(mapInstanceRef.current);
     }
 

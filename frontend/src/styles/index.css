@@ -1,0 +1,209 @@
+/* Map Component */
+.map-container {
+  width: 100%;
+  height: 400px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  margin: var(--spacing-xl) 0;
+}
+
+/* Voice Input Component */
+.voice-input {
+  margin: var(--spacing-xl) 0;
+}
+
+.record-button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-base);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+  font-size: 18px;
+}
+
+.record-button:hover:not(.disabled) {
+  background-color: var(--primary-dark);
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+.record-button.recording {
+  background-color: var(--danger-color);
+  animation: pulse var(--transition-slow) infinite alternate;
+}
+
+.record-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes pulse {
+  from {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+  }
+  to {
+    box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+  }
+}
+
+/* Route Display Component */
+.route-display {
+  background-color: var(--bg-white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  margin: var(--spacing-xl) 0;
+}
+
+.route-display.loading {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--spacing-2xl);
+}
+
+.route-display.empty {
+  text-align: center;
+  color: var(--text-light);
+  padding: var(--spacing-2xl);
+}
+
+.route-info {
+  display: flex;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.route-info p {
+  margin: 0;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.step {
+  display: flex;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: #f9f9f9;
+  border-left: 4px solid var(--primary-color);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-base);
+}
+
+.step:hover {
+  background-color: #f0f0f0;
+  transform: translateX(4px);
+}
+
+.step-number {
+  background-color: var(--primary-color);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: bold;
+  font-size: var(--font-size-sm);
+}
+
+.step-content {
+  flex: 1;
+}
+
+.instruction {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.distance {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* App Layout */
+.app {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.header h1 {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.header p {
+  font-size: var(--font-size-base);
+  opacity: 0.9;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-xl);
+}
+
+.destination-info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  margin: var(--spacing-xl) 0;
+  border-left: 4px solid var(--info-color);
+}
+
+.destination-info h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: var(--font-size-xl);
+  }
+
+  .container {
+    padding: var(--spacing-xl);
+    margin: var(--spacing-md);
+  }
+
+  .main-content {
+    padding: var(--spacing-md);
+  }
+
+  .map-container {
+    height: 300px;
+  }
+
+  .route-info {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+}

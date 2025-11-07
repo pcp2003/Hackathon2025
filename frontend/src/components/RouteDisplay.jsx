@@ -1,5 +1,4 @@
 import React from 'react';
-import './RouteDisplay.css';
 
 export const RouteDisplay = ({ route, isLoading }) => {
   if (isLoading) {

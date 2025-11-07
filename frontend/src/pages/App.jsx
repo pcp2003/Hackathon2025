@@ -1,90 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import VoiceInput from '../components/VoiceInput';
 import Map from '../components/Map';
 import RouteDisplay from '../components/RouteDisplay';
-import apiClient from '../services/apiClient';
-import locationService from '../services/locationService';
-import './App.css';
+import { useGeolocation, useNavigation } from '../hooks';
+import '../styles/index.css';
 
 export const App = () => {
-  const [currentLocation, setCurrentLocation] = useState(null);
-  const [destination, setDestination] = useState(null);
-  const [route, setRoute] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [locationWatch, setLocationWatch] = useState(null);
+  const { location: currentLocation, error: locationError } = useGeolocation();
+  const { destination, route, isLoading, error, handleTranscribe } = useNavigation(currentLocation);
 
-  // Get initial location
-  useEffect(() => {
-    const initializeLocation = async () => {
-      try {
-        const location = await locationService.getCurrentLocation();
-        setCurrentLocation(location);
-      } catch (error) {
-        setError('Could not get your location. Please enable location services.');
-        console.error('Location error:', error);
-      }
-    };
-
-    initializeLocation();
-
-    // Watch location for changes
-    const watchId = locationService.watchLocation(
-      (location) => {
-        setCurrentLocation(location);
-      },
-      (error) => {
-        console.error('Watch location error:', error);
-      }
-    );
-
-    setLocationWatch(watchId);
-
-    return () => {
-      if (watchId !== null) {
-        locationService.clearWatch(watchId);
-      }
-    };
-  }, []);
-
-  const handleTranscribe = async (audioBlob) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Transcribe audio
-      const transcribeResult = await apiClient.transcribe(audioBlob);
-      console.log('Transcribed:', transcribeResult.text);
-
-      // Analyze destination
-      const destinationResult = await apiClient.analyzeDestination(transcribeResult.text);
-      setDestination(destinationResult);
-
-      // Get route
-      if (currentLocation) {
-        const routeResult = await apiClient.getRoute(
-          currentLocation.latitude,
-          currentLocation.longitude,
-          destinationResult.latitude,
-          destinationResult.longitude
-        );
-        setRoute(routeResult);
-
-        // Generate and play guidance
-        const firstInstruction = routeResult.steps[0]?.instruction;
-        if (firstInstruction) {
-          const audioGuidance = await apiClient.generateGuidance(firstInstruction);
-          const audio = new Audio(URL.createObjectURL(audioGuidance));
-          audio.play();
-        }
-      }
-    } catch (err) {
-      setError(err.message || 'An error occurred. Please try again.');
-      console.error('Navigation error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const displayError = error || locationError;
 
   return (
     <div className="app">
@@ -94,7 +19,7 @@ export const App = () => {
       </header>
 
       <main className="main-content">
-        {error && <div className="error-message">{error}</div>}
+        {displayError && <div className="alert alert-error">{displayError}</div>}
 
         <div className="container">
           <VoiceInput onTranscribe={handleTranscribe} isLoading={isLoading} />

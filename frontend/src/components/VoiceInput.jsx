@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import './VoiceInput.css';
+import { useAudio } from '../hooks';
 
 export const VoiceInput = ({ onTranscribe, isLoading }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -31,7 +31,7 @@ export const VoiceInput = ({ onTranscribe, isLoading }) => {
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
       setIsRecording(false);
     }
   };
