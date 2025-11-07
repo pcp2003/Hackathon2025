@@ -10,16 +10,19 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from main import app
 
-client = TestClient(app)
+@pytest.fixture
+def client():
+    """Create test client fixture"""
+    return TestClient(app)
 
-def test_health_check():
+def test_health_check(client):
     """Test health check endpoint returns success"""
     response = client.get("/api/health")
     assert response.status_code == 200
     assert response.json()["status"] == "healthy"
     assert "version" in response.json()
 
-def test_health_check_response_format():
+def test_health_check_response_format(client):
     """Test health check response has correct format"""
     response = client.get("/api/health")
     data = response.json()
