@@ -2,45 +2,31 @@
 Navigation endpoints for voice-based routing
 """
 from fastapi import APIRouter, UploadFile, File, Form
-from pydantic import BaseModel
-from typing import List
 import logging
 
 from services.transcription import transcribe_audio
 from services.nlp import extract_destination
 from services.routing import calculate_route
 from services.text_to_speech import generate_audio_guidance
+from schemas.navigation import (
+    TranscribeResponse,
+    DestinationResponse,
+    RouteResponse,
+    RouteStep,
+    LocationUpdateResponse,
+)
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(prefix="/api", tags=["navigation"])
 
-class LocationRequest(BaseModel):
-    latitude: float
-    longitude: float
-
-class TranscribeResponse(BaseModel):
-    text: str
-    confidence: float
-
-class DestinationResponse(BaseModel):
-    destination: str
-    latitude: float
-    longitude: float
-
-class RouteStep(BaseModel):
-    instruction: str
-    distance: float
-    duration: float
-
-class RouteResponse(BaseModel):
-    steps: List[RouteStep]
-    total_distance: float
-    total_duration: float
 
 @router.post("/transcribe", response_model=TranscribeResponse)
 async def transcribe(audio: UploadFile = File(...)):
     """
     Convert audio to text using ElevenLabs STT
+    
+    - **audio**: Audio file to transcribe
+    - Returns: Transcribed text with confidence score
     """
     try:
         result = await transcribe_audio(audio)
@@ -49,10 +35,14 @@ async def transcribe(audio: UploadFile = File(...)):
         logger.error(f"Transcription error: {str(e)}")
         raise
 
+
 @router.post("/analyze", response_model=DestinationResponse)
 async def analyze_destination(text: str = Form(...)):
     """
     Extract destination from natural language using NLP
+    
+    - **text**: Natural language input describing destination
+    - Returns: Destination name and coordinates
     """
     try:
         destination_data = await extract_destination(text)
@@ -61,15 +51,22 @@ async def analyze_destination(text: str = Form(...)):
         logger.error(f"Analysis error: {str(e)}")
         raise
 
+
 @router.post("/route", response_model=RouteResponse)
 async def get_route(
     origin_lat: float = Form(...),
     origin_lon: float = Form(...),
     dest_lat: float = Form(...),
-    dest_lon: float = Form(...)
+    dest_lon: float = Form(...),
 ):
     """
     Calculate optimal route using OSRM
+    
+    - **origin_lat**: Starting point latitude
+    - **origin_lon**: Starting point longitude
+    - **dest_lat**: Destination latitude
+    - **dest_lon**: Destination longitude
+    - Returns: Route with steps, distance, and duration
     """
     try:
         route_data = await calculate_route(
@@ -86,10 +83,14 @@ async def get_route(
         logger.error(f"Routing error: {str(e)}")
         raise
 
+
 @router.post("/speak")
 async def text_to_speech(text: str = Form(...)):
     """
     Convert text to speech audio using ElevenLabs TTS
+    
+    - **text**: Instruction text to convert to audio
+    - Returns: Audio file in MP3 format
     """
     try:
         audio_content = await generate_audio_guidance(text)
@@ -101,27 +102,39 @@ async def text_to_speech(text: str = Form(...)):
         logger.error(f"TTS error: {str(e)}")
         raise
 
-@router.post("/update-location")
+
+@router.post("/update-location", response_model=LocationUpdateResponse)
 async def update_location(
     latitude: float = Form(...),
     longitude: float = Form(...),
     destination_lat: float = Form(...),
-    destination_lon: float = Form(...)
+    destination_lon: float = Form(...),
 ):
     """
     Update user location and recalculate if off-route
+    
+    - **latitude**: Current latitude
+    - **longitude**: Current longitude
+    - **destination_lat**: Destination latitude
+    - **destination_lon**: Destination longitude
+    - Returns: Route status and whether recalculation is needed
     """
     try:
         result = await check_route_deviation(
             current=(latitude, longitude),
             destination=(destination_lat, destination_lon)
         )
-        return result
+        return LocationUpdateResponse(**result)
     except Exception as e:
         logger.error(f"Location update error: {str(e)}")
         raise
 
+
 async def check_route_deviation(current, destination):
     """Helper function to check if user is off-route"""
     # TODO: Implement route deviation detection
-    return {"on_route": True, "needs_recalculation": False}
+    return {
+        "on_route": True,
+        "needs_recalculation": False,
+        "message": "User is on route"
+    }
