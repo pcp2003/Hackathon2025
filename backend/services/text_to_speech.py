@@ -1,24 +1,25 @@
-"""
-Text-to-Speech service using ElevenLabs
-"""
-import logging
+import os
+from dotenv import load_dotenv
+from elevenlabs.client import ElevenLabs
 
-logger = logging.getLogger(__name__)
+load_dotenv()
 
-async def generate_audio_guidance(text: str):
-    """
-    Convert text instructions to audio using ElevenLabs TTS
-    
-    Args:
-        text: Instruction text to convert
-        
-    Returns:
-        Audio content in mp3 format
-    """
-    try:
-        # TODO: Implement ElevenLabs TTS integration
-        # For now, return placeholder
-        return b"mock_audio_content"
-    except Exception as e:
-        logger.error(f"TTS generation failed: {str(e)}")
-        raise
+elevenlabs = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
+
+def text_to_speech(data, output_file="navigation.wav", voice="Adam"):
+    text_to_speak = "Navigation instructions: "
+    for step in data["steps"]:
+        text_to_speak += f"{step['instruction']} for {step['distance']} meters. "
+    text_to_speak += f"Total distance: {data['total_distance']} meters."
+
+    response = elevenlabs.text_to_speech.convert(
+        voice=voice,
+        model_id="eleven_multilingual_v2",
+        text=text_to_speak
+    )
+
+    with open(output_file, "wb") as f:
+        for chunk in response:
+            f.write(chunk)
+
+    return output_file
