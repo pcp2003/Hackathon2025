@@ -1,5 +1,7 @@
 """
 Routing service using OSRM (Open Source Routing Machine)
+Optimized for pedestrian navigation - suitable for visually impaired users
+Uses pre-processed profile-specific OSRM servers from OpenStreetMap
 """
 import logging
 import os
@@ -8,29 +10,38 @@ from typing import Dict, List, Tuple
 
 logger = logging.getLogger(__name__)
 
-# OSRM API endpoint - can be overridden via environment variable
-OSRM_BASE_URL = os.getenv("OSRM_BASE_URL", "http://router.project-osrm.org")
+# OSRM API endpoints - pre-processed for different profiles
+# These are free servers maintained by OpenStreetMap Foundation
+OSRM_SERVERS = {
+    "foot": "https://routing.openstreetmap.de/routed-foot/route/v1/foot",
+    "bike": "https://routing.openstreetmap.de/routed-bike/route/v1/bike",
+    "car": "https://routing.openstreetmap.de/routed-car/route/v1/car"
+}
+
+# Routing profile for pedestrian navigation
+ROUTING_PROFILE = "foot"
 
 def _format_instruction(maneuver: Dict, name: str) -> str:
     """
-    Format OSRM maneuver into human-readable instruction
+    Format OSRM maneuver into human-readable instruction for pedestrians
     
     Args:
         maneuver: OSRM maneuver object
         name: Street/road name
         
     Returns:
-        Formatted instruction string
+        Formatted instruction string optimized for pedestrian navigation
     """
     maneuver_type = maneuver.get("type", "")
     modifier = maneuver.get("modifier", "")
     
+    # Pedestrian-friendly instructions
     instructions = {
-        "depart": f"Head {modifier or 'straight'} on {name}" if name else "Start navigation",
-        "turn": f"Turn {modifier} onto {name}" if modifier else f"Turn onto {name}",
+        "depart": f"Start walking {modifier or 'straight'} on {name}" if name else "Start your journey",
+        "turn": f"Turn {modifier} onto {name}" if modifier else f"Head to {name}",
         "new name": f"Continue on {name}",
-        "continue": f"Continue straight on {name}" if name else "Continue straight",
-        "arrive": f"Arrive at destination",
+        "continue": f"Keep walking straight on {name}" if name else "Continue straight",
+        "arrive": f"You have arrived at your destination",
     }
     
     if maneuver_type in instructions:
@@ -38,12 +49,14 @@ def _format_instruction(maneuver: Dict, name: str) -> str:
     
     # Fallback for other maneuver types
     if modifier:
-        return f"{modifier.capitalize()} onto {name}" if name else modifier.capitalize()
-    return f"Follow {name}" if name else "Continue"
+        return f"Go {modifier} towards {name}" if name else f"Go {modifier}"
+    return f"Walk along {name}" if name else "Continue forward"
 
 async def calculate_route(origin: Tuple[float, float], destination: Tuple[float, float]) -> Dict:
     """
-    Calculate optimal route between two coordinates using OSRM
+    Calculate optimal pedestrian route between two coordinates using OSRM
+    
+    Optimized for visually impaired users with pedestrian-friendly directions.
     
     Args:
         origin: tuple of (latitude, longitude)
@@ -54,7 +67,7 @@ async def calculate_route(origin: Tuple[float, float], destination: Tuple[float,
         {
             "steps": [
                 {
-                    "instruction": str,
+                    "instruction": str (pedestrian-friendly),
                     "distance": float (meters),
                     "duration": float (seconds)
                 }
@@ -72,7 +85,10 @@ async def calculate_route(origin: Tuple[float, float], destination: Tuple[float,
         
         # OSRM uses longitude,latitude format
         coordinates = f"{origin_lon},{origin_lat};{dest_lon},{dest_lat}"
-        url = f"{OSRM_BASE_URL}/route/v1/driving/{coordinates}"
+        
+        # Get the appropriate OSRM server for the profile
+        osrm_base_url = OSRM_SERVERS.get(ROUTING_PROFILE, OSRM_SERVERS["foot"])
+        url = f"{osrm_base_url}/{coordinates}"
         
         params = {
             "overview": "false",
