@@ -1,6 +1,8 @@
 """
 Audio transcription service using ElevenLabs
 """
+import elevenlabs
+import json
 from fastapi import UploadFile
 import logging
 
@@ -17,13 +19,17 @@ async def transcribe_audio(audio: UploadFile):
         dict with text and confidence score
     """
     try:
-        # TODO: Implement ElevenLabs STT integration
-        # For now, return placeholder
-        content = await audio.read()
-        return {
-            "text": "Sample transcription",
-            "confidence": 0.95
-        }
+        audio_file = await audio.read()
+
+        response = elevenlabs.speech_to_text.convert(
+            file=audio_file,
+            model_id="scribe_v1",
+            tag_audio_events=True,
+            diarize=False
+        )
+        data = json.loads(response.text)
+
+        return data
     except Exception as e:
         logger.error(f"Transcription failed: {str(e)}")
         raise
