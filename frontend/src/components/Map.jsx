@@ -64,8 +64,15 @@ export const Map = ({ destination, currentLocation, route }) => {
     }
 
     // Add route
-    if (route && route.steps && route.steps.length > 0) {
-      // For visualization, create a simple polyline
+    if (route && route.route_coordinates && route.route_coordinates.length > 0) {
+      // Use the actual route coordinates from the backend
+      L.polyline(route.route_coordinates, {
+        color: '#007bff',
+        weight: 3,
+        opacity: 0.7,
+      }).addTo(map);
+    } else if (route && route.steps && route.steps.length > 0) {
+      // Fallback: create a simple polyline if route_coordinates not available
       const routeCoords = [];
       if (currentLocation) {
         routeCoords.push([currentLocation.latitude, currentLocation.longitude]);

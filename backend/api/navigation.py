@@ -153,7 +153,8 @@ async def get_route(
             "success": True,
             "steps": [step.model_dump() for step in steps],
             "total_distance": route_data["total_distance"],
-            "total_duration": route_data["total_duration"]
+            "total_duration": route_data["total_duration"],
+            "route_coordinates": route_data.get("route_coordinates", [])
         }
     except Exception as e:
         # Handle other errors (routing service errors, etc)
