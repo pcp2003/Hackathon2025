@@ -5,7 +5,7 @@ from fastapi import APIRouter, UploadFile, File, Form
 import logging
 
 from services.transcription import transcribe_audio
-from services.nlp import extract_destination
+from services.nlp import text_to_places
 from services.routing import calculate_route
 from services.text_to_speech import generate_audio_guidance
 from schemas.navigation import (
@@ -18,6 +18,8 @@ from schemas.navigation import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["navigation"])
+
+
 
 
 @router.post("/transcribe", response_model=TranscribeResponse)
@@ -45,7 +47,9 @@ async def analyze_destination(text: str = Form(...)):
     - Returns: Destination name and coordinates
     """
     try:
-        destination_data = await extract_destination(text)
+        # Get transcription data from text
+        transcription_data = {"text": text, "confidence": 1.0}
+        destination_data = text_to_places(transcription_data)
         return DestinationResponse(**destination_data)
     except Exception as e:
         logger.error(f"Analysis error: {str(e)}")
