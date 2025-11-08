@@ -28,7 +28,9 @@ from schemas.navigation import (
     ErrorResponse,
 )
 
+
 logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api", tags=["navigation"])
 
 # Store current user location and route state
@@ -47,7 +49,7 @@ current_route_state = {
 async def transcribe(audio: UploadFile = File(...)):
     """
     Convert audio to text using ElevenLabs STT
-    
+
     - **audio**: Audio file to transcribe
     - Returns: Transcribed text with confidence score
     """
@@ -64,14 +66,14 @@ async def analyze_destination(text: str = Form(...)):
     """
     Extract destination from natural language using NLP with user location context.
     Uses the current user location from the last /update-location call.
-    
+
     - **text**: Natural language input describing destination
     - Returns: Destination name and coordinates
     """
     try:
         # Get transcription data from text
         transcription_data = {"text": text, "confidence": 1.0}
-        
+
         # Build user coordinates from stored location
         user_coords = None
         if current_user_location["latitude"] is not None and current_user_location["longitude"] is not None:
@@ -82,7 +84,7 @@ async def analyze_destination(text: str = Form(...)):
             logger.info(f"Using user location: {user_coords}")
         else:
             logger.warning("No user location available. Using generic analysis.")
-        
+
         # Extract destination address (with or without user location context)
         destination_data = text_to_places(transcription_data, user_coords=user_coords)
         return DestinationResponse(**destination_data)
@@ -304,7 +306,7 @@ async def update_location(
 ):
     """
     Update user location and recalculate if off-route
-    
+
     - **latitude**: Current latitude
     - **longitude**: Current longitude
     - **destination_lat**: Destination latitude
@@ -316,7 +318,7 @@ async def update_location(
         current_user_location["latitude"] = latitude
         current_user_location["longitude"] = longitude
         logger.info(f"Updated user location: ({latitude}, {longitude})")
-        
+
         result = await check_route_deviation(
             current=(latitude, longitude),
             destination=(destination_lat, destination_lon)
