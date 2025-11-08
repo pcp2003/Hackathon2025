@@ -98,7 +98,7 @@ async def speak_text(text: str = Form(...)):
         audio_content = text_to_speech(text)
         return {
             "audio": audio_content,
-            "format": "mp3"
+            "format": "wav"
         }
     except Exception as e:
         logger.error(f"TTS error: {str(e)}")
