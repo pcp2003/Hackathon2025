@@ -104,6 +104,20 @@ const apiClient = {
 
     return this.request(API_CONFIG.ENDPOINTS.UPDATE_LOCATION, formData);
   },
+
+  async analyzeImage(formData) {
+    return this.request(API_CONFIG.ENDPOINTS.ANALYZE_IMAGE, formData);
+  },
 };
 
 export default apiClient;
+
+// Export individual functions for easier imports
+export const analyzeImage = (formData) => apiClient.analyzeImage(formData);
+export const transcribe = (audioBlob) => apiClient.transcribe(audioBlob);
+export const analyzeDestination = (text) => apiClient.analyzeDestination(text);
+export const getRoute = (originLat, originLon, destLat, destLon) => apiClient.getRoute(originLat, originLon, destLat, destLon);
+export const generateGuidance = (text) => apiClient.generateGuidance(text);
+export const generateInitialGuidance = (originName, destName, totalDistance, totalDuration) => apiClient.generateInitialGuidance(originName, destName, totalDistance, totalDuration);
+export const generateStepGuidance = (stepIndex, instruction, stepNumber) => apiClient.generateStepGuidance(stepIndex, instruction, stepNumber);
+export const updateLocation = (lat, lon, destLat, destLon) => apiClient.updateLocation(lat, lon, destLat, destLon);

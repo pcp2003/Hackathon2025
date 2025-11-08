@@ -2,6 +2,17 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useGeolocation } from '../hooks/useGeolocation';
 
+// Mock the API client before importing
+vi.mock('../services/api', () => ({
+  default: {
+    updateLocation: vi.fn().mockResolvedValue({
+      on_route: true,
+      needs_recalculation: false,
+      message: 'User is on route',
+    }),
+  },
+}));
+
 describe('useGeolocation Hook', () => {
   let mockGeolocation;
   let mockWatchId = 123;
@@ -98,7 +109,7 @@ describe('useGeolocation Hook', () => {
   });
 
   it('should handle geolocation errors gracefully', async () => {
-    const mockError = new GeolocationPositionError();
+    const mockError = new Error('Permission denied');
     mockError.code = 1; // PERMISSION_DENIED
 
     mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
@@ -138,7 +149,6 @@ describe('useGeolocation Hook', () => {
 describe('useGeolocation with Destination Tracking', () => {
   let mockGeolocation;
   let mockWatchId = 123;
-  let mockApiClient;
 
   beforeEach(() => {
     // Mock navigator.geolocation
@@ -152,20 +162,6 @@ describe('useGeolocation with Destination Tracking', () => {
       writable: true,
       value: mockGeolocation,
     });
-
-    // Mock API client
-    mockApiClient = {
-      updateLocation: vi.fn().mockResolvedValue({
-        on_route: true,
-        needs_recalculation: false,
-        message: 'User is on route',
-      }),
-    };
-
-    // Mock the import
-    vi.mock('../services/api', () => ({
-      default: mockApiClient,
-    }));
   });
 
   afterEach(() => {

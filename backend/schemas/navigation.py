@@ -82,3 +82,6 @@ class ErrorResponse(BaseModel):
     error_message: str = Field(..., description="Human-readable error message")
     audio: str = Field(..., description="Path to audio file with error explanation")
     format: str = Field(..., description="Audio format (wav)")
+
+class ImageAnalysisResponse(BaseModel):
+    description: str
