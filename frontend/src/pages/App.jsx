@@ -14,8 +14,8 @@ export const App = () => {
   return (
     <div className="app">
       <header className="header">
-        <h1>EchoPath</h1>
-        <p>An advanced voice-driven navigation system leveraging AI and spatial data to provide real-time guidance for visually impaired users. Designed to bridge accessibility gaps, it ensures safe and confident movement through any environment.</p>
+        <h1>🧭 NaviAcess</h1>
+        <p>Voice navigation for visually impaired users - powered by AI and real-time GPS guidance.</p>
       </header>
 
       <main className="main-content">
