@@ -7,20 +7,31 @@ import logging
 from services.transcription import transcribe_audio
 from services.nlp import text_to_places
 from services.routing import calculate_route
-from services.text_to_speech import text_to_speech
+from services.text_to_speech import text_to_speech, text_to_speech_stream, _format_initial_guidance
 from schemas.navigation import (
     TranscribeResponse,
     DestinationResponse,
     RouteResponse,
     RouteStep,
     LocationUpdateResponse,
+    SpeakResponse,
+    InitialGuidanceRequest,
+    InitialGuidanceResponse,
+    StepGuidanceRequest,
+    StepGuidanceResponse,
 )
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["navigation"])
 
-# Store current user location
+# Store current user location and route state
 current_user_location = {"latitude": None, "longitude": None}
+current_route_state = {
+    "steps": [],
+    "total_distance": 0.0,
+    "total_duration": 0.0,
+    "current_step_index": 0,
+}
 
 
 
@@ -94,6 +105,13 @@ async def get_route(
             origin=(origin_lat, origin_lon),
             destination=(dest_lat, dest_lon)
         )
+        
+        # Store route state for later use in location updates
+        current_route_state["steps"] = route_data["steps"]
+        current_route_state["total_distance"] = route_data["total_distance"]
+        current_route_state["total_duration"] = route_data["total_duration"]
+        current_route_state["current_step_index"] = 0
+        
         steps = [RouteStep(**step) for step in route_data["steps"]]
         return RouteResponse(
             steps=steps,
@@ -105,24 +123,112 @@ async def get_route(
         raise
 
 
-@router.post("/speak")
+@router.post("/speak", response_model=SpeakResponse)
 async def speak_text(text: str = Form(...)):
     """
     Convert text to speech audio.
 
     - **text**: Instruction text to convert to audio
-    - Returns: Audio file path and format
+    - Returns: Audio file URL and format
     """
     try:
-        # text_to_speech is implemented as a synchronous helper that writes a
-        # file and returns the filename. Call it directly (do not await).
-        audio_content = text_to_speech(text)
-        return {
-            "audio": audio_content,
-            "format": "wav"
-        }
+        # text_to_speech_stream generates individual step audio
+        audio_path = text_to_speech_stream(text, output_file="guidance.wav")
+        
+        # Convert file path to URL
+        audio_url = f"/audio/guidance.wav"
+        
+        return SpeakResponse(
+            audio=audio_url,
+            format="wav"
+        )
     except Exception as e:
         logger.error(f"TTS error: {str(e)}")
+        raise
+
+
+@router.post("/speak-initial", response_model=InitialGuidanceResponse)
+async def speak_initial_guidance(
+    origin_name: str = Form(...),
+    destination_name: str = Form(...),
+    total_distance: float = Form(...),
+    total_duration: float = Form(...),
+):
+    """
+    Generate initial guidance audio describing the entire route.
+    Called after route calculation to give user overview.
+    
+    - **origin_name**: Starting location name
+    - **destination_name**: Destination name
+    - **total_distance**: Total route distance in meters
+    - **total_duration**: Total route duration in seconds
+    - Returns: Audio file URL with initial guidance message
+    """
+    try:
+        # Format the initial guidance message
+        guidance_text = _format_initial_guidance(
+            origin_name,
+            destination_name,
+            total_distance,
+            total_duration
+        )
+        
+        # Generate audio
+        audio_path = text_to_speech_stream(
+            guidance_text,
+            output_file="initial_guidance.wav"
+        )
+        
+        # Convert file path to URL
+        audio_url = f"/audio/initial_guidance.wav"
+        
+        return InitialGuidanceResponse(
+            audio=audio_url,
+            format="wav",
+            message=guidance_text
+        )
+    except Exception as e:
+        logger.error(f"Initial guidance TTS error: {str(e)}")
+        raise
+
+
+@router.post("/speak-step", response_model=StepGuidanceResponse)
+async def speak_step_guidance(
+    step_index: int = Form(...),
+    instruction: str = Form(...),
+    step_number: int = Form(...),
+):
+    """
+    Generate audio for a single navigation step.
+    Called when user reaches the point to execute this step.
+    
+    - **step_index**: Index of step in the route
+    - **instruction**: The navigation instruction text
+    - **step_number**: User-facing step number (for context)
+    - Returns: Audio file URL with step instruction
+    """
+    try:
+        # Format the step instruction with context
+        step_text = f"Step {step_number}. {instruction}"
+        
+        # Generate audio for this specific step
+        output_filename = f"step_{step_index}.wav"
+        audio_path = text_to_speech_stream(
+            step_text,
+            output_file=output_filename
+        )
+        
+        # Convert file path to URL
+        audio_url = f"/audio/{output_filename}"
+        
+        return StepGuidanceResponse(
+            audio=audio_url,
+            format="wav",
+            step_index=step_index,
+            instruction=instruction
+        )
+    except Exception as e:
+        logger.error(f"Step guidance TTS error: {str(e)}")
         raise
 
 
@@ -140,7 +246,7 @@ async def update_location(
     - **longitude**: Current longitude
     - **destination_lat**: Destination latitude
     - **destination_lon**: Destination longitude
-    - Returns: Route status and whether recalculation is needed
+    - Returns: Route status, next step instruction if needed, and audio if step completed
     """
     try:
         # Store current user location for use in /analyze endpoint
@@ -159,8 +265,12 @@ async def update_location(
 
 
 async def check_route_deviation(current, destination):
-    """Helper function to check if user is off-route"""
-    # TODO: Implement route deviation detection
+    """
+    Check if user is off-route and determine next step.
+    Returns next instruction audio if user has completed current step.
+    """
+    # TODO: Implement advanced route deviation detection with geofencing
+    # For now, basic implementation
     return {
         "on_route": True,
         "needs_recalculation": False,

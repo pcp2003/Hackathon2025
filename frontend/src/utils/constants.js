@@ -9,6 +9,8 @@ export const API_CONFIG = {
     ANALYZE: '/api/analyze',
     ROUTE: '/api/route',
     SPEAK: '/api/speak',
+    SPEAK_INITIAL: '/api/speak-initial',
+    SPEAK_STEP: '/api/speak-step',
     UPDATE_LOCATION: '/api/update-location',
   },
   TIMEOUT: 30000, // 30 seconds

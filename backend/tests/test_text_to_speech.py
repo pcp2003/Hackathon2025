@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import pytest
 from unittest.mock import patch, MagicMock
-from services.text_to_speech import text_to_speech
+from services.text_to_speech import text_to_speech, text_to_speech_stream, _format_initial_guidance
 
 
 @pytest.fixture
@@ -94,3 +94,67 @@ def test_text_to_speech_missing_api_key(sample_data, monkeypatch, audio_dir):
     
     with pytest.raises(RuntimeError, match="ELEVENLABS_API_KEY não definida"):
         text_to_speech(sample_data)
+
+
+def test_text_to_speech_stream_creates_file(mock_elevenlabs_client, mock_env, audio_dir):
+    """Testa se text_to_speech_stream cria arquivo para instruções individuais."""
+    text = "Turn left on 5th Avenue for 150 meters."
+    output_path = text_to_speech_stream(text, output_file="step_instruction.wav")
+
+    assert os.path.exists(output_path)
+    assert "audio_output" in output_path
+    assert "step_instruction.wav" in output_path
+    assert os.path.getsize(output_path) > 0
+
+
+def test_text_to_speech_stream_calls_elevenlabs(mock_elevenlabs_client, mock_env, audio_dir):
+    """Testa se text_to_speech_stream chama ElevenLabs corretamente."""
+    text = "Walk straight ahead on Main Street."
+    text_to_speech_stream(text, output_file="guidance.wav")
+
+    client_instance = mock_elevenlabs_client.return_value
+    client_instance.text_to_speech.convert.assert_called()
+    
+    call_kwargs = client_instance.text_to_speech.convert.call_args.kwargs
+    assert call_kwargs["text"] == text
+    assert call_kwargs["voice_id"] == "21m00Tcm4TlvDq8ikWAM"
+
+
+def test_format_initial_guidance():
+    """Testa formatação da mensagem de orientação inicial."""
+    guidance_text = _format_initial_guidance(
+        origin_name="Central Park",
+        destination_name="Times Square",
+        total_distance=1200.0,  # 1.2 km
+        total_duration=900.0    # 15 minutos
+    )
+
+    # Verifica se a mensagem contém informações críticas
+    assert "Central Park" in guidance_text
+    assert "Times Square" in guidance_text
+    assert "1.2" in guidance_text  # km
+    assert "15" in guidance_text   # minutos
+    assert "You are starting from" in guidance_text
+    assert "Your destination is" in guidance_text
+
+
+def test_format_initial_guidance_with_long_distance():
+    """Testa formatação com distância maior."""
+    guidance_text = _format_initial_guidance(
+        origin_name="Downtown",
+        destination_name="Airport",
+        total_distance=5500.0,   # 5.5 km
+        total_duration=2700.0    # 45 minutos
+    )
+
+    assert "5.5" in guidance_text
+    assert "45" in guidance_text
+
+
+def test_text_to_speech_stream_missing_api_key(monkeypatch, audio_dir):
+    """Testa erro quando ELEVENLABS_API_KEY não está definida para stream."""
+    monkeypatch.delenv("ELEVENLABS_API_KEY", raising=False)
+    
+    with pytest.raises(RuntimeError, match="ELEVENLABS_API_KEY não definida"):
+        text_to_speech_stream("Test instruction")
+

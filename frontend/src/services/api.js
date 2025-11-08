@@ -5,6 +5,10 @@ import { API_CONFIG } from '../utils/constants';
  * Handles all HTTP requests to the backend
  */
 const apiClient = {
+  getBaseUrl() {
+    return API_CONFIG.BASE_URL;
+  },
+
   async request(endpoint, formData) {
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
@@ -58,6 +62,25 @@ const apiClient = {
     formData.append('text', text);
 
     return this.request(API_CONFIG.ENDPOINTS.SPEAK, formData);
+  },
+
+  async generateInitialGuidance(originName, destName, totalDistance, totalDuration) {
+    const formData = new FormData();
+    formData.append('origin_name', originName);
+    formData.append('destination_name', destName);
+    formData.append('total_distance', totalDistance);
+    formData.append('total_duration', totalDuration);
+
+    return this.request(API_CONFIG.ENDPOINTS.SPEAK_INITIAL, formData);
+  },
+
+  async generateStepGuidance(stepIndex, instruction, stepNumber) {
+    const formData = new FormData();
+    formData.append('step_index', stepIndex);
+    formData.append('instruction', instruction);
+    formData.append('step_number', stepNumber);
+
+    return this.request(API_CONFIG.ENDPOINTS.SPEAK_STEP, formData);
   },
 
   async updateLocation(lat, lon, destLat, destLon) {

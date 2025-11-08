@@ -1,33 +1,105 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import apiClient from '../services/api';
 
 /**
  * Hook para gerenciar lógica central de navegação
- * Orquestra: transcrição → análise de destino → cálculo de rota
+ * Orquestra: transcrição → análise de destino → cálculo de rota → áudio de instrução
  */
 export const useNavigation = (currentLocation) => {
   const [destination, setDestination] = useState(null);
   const [route, setRoute] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const audioRef = useRef(null);
 
+  /**
+   * Reproduz áudio e aguarda conclusão
+   */
+  const playAudioFile = useCallback((audioPath) => {
+    return new Promise((resolve) => {
+      // Converter para URL absoluta se necessário
+      const audioUrl = audioPath.startsWith('http') 
+        ? audioPath 
+        : `${apiClient.getBaseUrl()}${audioPath}`;
+      
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      setIsPlayingAudio(true);
+
+      audio.onended = () => {
+        setIsPlayingAudio(false);
+        resolve();
+      };
+
+      audio.onerror = (error) => {
+        console.error('Error playing audio:', error);
+        setIsPlayingAudio(false);
+        resolve();
+      };
+
+      audio.play().catch((err) => {
+        console.error('Error starting audio:', err);
+        setIsPlayingAudio(false);
+        resolve();
+      });
+    });
+  }, []);
+
+  /**
+   * Gera e reproduz áudio inicial após calcular rota
+   */
+  const playInitialGuidance = useCallback(async (originName, destName, routeData) => {
+    try {
+      const response = await apiClient.generateInitialGuidance(
+        originName,
+        destName,
+        routeData.total_distance,
+        routeData.total_duration
+      );
+      await playAudioFile(response.audio);
+    } catch (err) {
+      console.error('Error generating initial guidance:', err);
+    }
+  }, [playAudioFile]);
+
+  /**
+   * Gera e reproduz áudio para um passo específico
+   */
+  const playStepGuidance = useCallback(async (stepIndex, instruction) => {
+    try {
+      const response = await apiClient.generateStepGuidance(
+        stepIndex,
+        instruction,
+        stepIndex + 1 // User-facing step number
+      );
+      await playAudioFile(response.audio);
+    } catch (err) {
+      console.error('Error generating step guidance:', err);
+    }
+  }, [playAudioFile]);
+
+  /**
+   * Transcreve áudio, análisa destino, calcula rota e reproduz instruções
+   */
   const handleTranscribe = useCallback(
     async (audioBlob) => {
       setIsLoading(true);
       setError(null);
 
       try {
-        // Transcribe audio
+        // Transcreve áudio
         const transcribeResult = await apiClient.transcribe(audioBlob);
         console.log('Transcribed:', transcribeResult.text);
 
-        // Analyze destination
+        // Análisa destino
         const destinationResult = await apiClient.analyzeDestination(
           transcribeResult.text
         );
         setDestination(destinationResult);
 
-        // Get route
+        // Calcula rota
         if (currentLocation) {
           const routeResult = await apiClient.getRoute(
             currentLocation.latitude,
@@ -36,13 +108,18 @@ export const useNavigation = (currentLocation) => {
             destinationResult.longitude
           );
           setRoute(routeResult);
+          setCurrentStepIndex(0);
 
-          // Generate and play guidance
-          const firstInstruction = routeResult.steps[0]?.instruction;
-          if (firstInstruction) {
-            const audioGuidance = await apiClient.generateGuidance(firstInstruction);
-            const audio = new Audio(URL.createObjectURL(audioGuidance));
-            audio.play();
+          // Reproduz orientação inicial com contexto da rota
+          await playInitialGuidance(
+            `your current location`,
+            destinationResult.destination_address,
+            routeResult
+          );
+
+          // Reproduz primeira instrução de passo
+          if (routeResult.steps && routeResult.steps.length > 0) {
+            await playStepGuidance(0, routeResult.steps[0].instruction);
           }
         }
       } catch (err) {
@@ -53,15 +130,48 @@ export const useNavigation = (currentLocation) => {
         setIsLoading(false);
       }
     },
-    [currentLocation]
+    [currentLocation, playInitialGuidance, playStepGuidance]
   );
+
+  /**
+   * Avança para o próximo passo e reproduz sua instrução
+   */
+  const moveToNextStep = useCallback(async () => {
+    if (!route || !route.steps) return;
+
+    const nextIndex = currentStepIndex + 1;
+    if (nextIndex < route.steps.length) {
+      setCurrentStepIndex(nextIndex);
+      await playStepGuidance(nextIndex, route.steps[nextIndex].instruction);
+    } else {
+      // Rota completada
+      setError(null);
+      console.log('Route completed!');
+    }
+  }, [route, currentStepIndex, playStepGuidance]);
+
+  /**
+   * Para reprodução de áudio atual
+   */
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsPlayingAudio(false);
+    }
+  }, []);
 
   return {
     destination,
     route,
+    currentStepIndex,
     isLoading,
+    isPlayingAudio,
     error,
     handleTranscribe,
+    moveToNextStep,
+    playStepGuidance,
+    stopAudio,
   };
 };
 

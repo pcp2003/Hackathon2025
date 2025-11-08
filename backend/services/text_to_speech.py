@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Union
+from typing import Union, Dict, Optional
 
 from dotenv import load_dotenv
 from elevenlabs.client import ElevenLabs
@@ -24,6 +24,38 @@ def _format_text(data: Union[str, dict]) -> str:
     else:
         text_to_speak = str(data)
     return text_to_speak
+
+
+def _format_initial_guidance(
+    origin_name: str,
+    destination_name: str,
+    total_distance: float,
+    total_duration: float
+) -> str:
+    """
+    Formata mensagem inicial de orientação para a rota.
+    
+    Args:
+        origin_name: Nome do ponto de origem
+        destination_name: Nome do destino
+        total_distance: Distância total em metros
+        total_duration: Duração total em segundos
+        
+    Returns:
+        Texto formatado para síntese de voz
+    """
+    distance_km = total_distance / 1000.0
+    duration_min = int(total_duration / 60)
+    
+    guidance = (
+        f"You are starting from {origin_name}. "
+        f"Your destination is {destination_name}. "
+        f"The total distance is {distance_km:.1f} kilometers, "
+        f"and it should take approximately {duration_min} minutes to walk. "
+        f"The best route has been calculated. "
+        f"Listen carefully to the instructions and start walking when ready."
+    )
+    return guidance
 
 
 def text_to_speech(data: Union[str, dict], output_file: str = "navigation.wav") -> str:
@@ -66,6 +98,44 @@ def text_to_speech(data: Union[str, dict], output_file: str = "navigation.wav") 
     )
 
     # Salva em arquivo WAV
+    with open(output_path, "wb") as f:
+        for chunk in response:
+            f.write(chunk)
+
+    return str(output_path)
+
+
+def text_to_speech_stream(text: str, output_file: str = "guidance.wav") -> str:
+    """
+    Converte texto simples para áudio WAV (para instruções individuais).
+    
+    Args:
+        text: Texto a ser convertido em voz
+        output_file: Nome do arquivo de saída
+        
+    Returns:
+        Caminho do arquivo WAV gerado
+        
+    Raises:
+        RuntimeError: Se ELEVENLABS_API_KEY não estiver configurada
+    """
+    _load_env()
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    if not api_key:
+        raise RuntimeError("ELEVENLABS_API_KEY não definida no arquivo .env")
+
+    # Cria pasta audio_output se não existir
+    audio_dir = Path(__file__).parent.parent / "audio_output"
+    audio_dir.mkdir(exist_ok=True)
+    
+    output_path = audio_dir / output_file
+
+    client = ElevenLabs(api_key=api_key)
+    response = client.text_to_speech.convert(
+        text=text,
+        voice_id="21m00Tcm4TlvDq8ikWAM"  # Rachel
+    )
+
     with open(output_path, "wb") as f:
         for chunk in response:
             f.write(chunk)

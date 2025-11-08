@@ -5,6 +5,8 @@ Voice navigation for visually impaired users
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 import logging
 
 from api import health_router, navigation_router
@@ -29,6 +31,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve static audio files
+audio_dir = Path(__file__).parent / "audio_output"
+audio_dir.mkdir(exist_ok=True)
+app.mount("/audio", StaticFiles(directory=str(audio_dir)), name="audio")
 
 # Include routers
 app.include_router(health_router)

@@ -5,12 +5,23 @@
 # from fastapi.testclient import TestClient
 # import sys
 # from pathlib import Path
+# from unittest.mock import patch, MagicMock
 
 # sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # from main import app
 
 # client = TestClient(app)
+
+
+# @pytest.fixture
+# def mock_elevenlabs():
+#     """Mock ElevenLabs para testes de TTS."""
+#     with patch('services.text_to_speech.ElevenLabs') as mock_client_class:
+#         mock_client = MagicMock()
+#         mock_client_class.return_value = mock_client
+#         mock_client.text_to_speech.convert.return_value = iter([b'audio_chunk_1', b'audio_chunk_2'])
+#         yield mock_client_class
 
 
 # def test_transcribe_endpoint_exists():
@@ -70,3 +81,4 @@
 #     assert "on_route" in data
 #     assert "needs_recalculation" in data
 #     assert "message" in data
+
