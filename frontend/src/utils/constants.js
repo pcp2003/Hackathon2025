@@ -12,6 +12,7 @@ export const API_CONFIG = {
     SPEAK_INITIAL: '/api/speak-initial',
     SPEAK_STEP: '/api/speak-step',
     UPDATE_LOCATION: '/api/update-location',
+    ANALYZE_IMAGE: '/api/analyze-image',
   },
   TIMEOUT: 30000, // 30 seconds
 };

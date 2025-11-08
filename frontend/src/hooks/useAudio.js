@@ -49,11 +49,47 @@ export const useAudio = () => {
     });
   }, [isRecording]);
 
-  const playAudio = useCallback((audioBlob) => {
-    const url = URL.createObjectURL(audioBlob);
-    const audio = new Audio(url);
-    audio.play();
-    return audio;
+  const playAudio = useCallback((input) => {
+    return new Promise((resolve) => {
+      let url;
+      
+      // Handle Blob or string URL
+      if (input instanceof Blob) {
+        url = URL.createObjectURL(input);
+      } else if (typeof input === 'string') {
+        // If it's a string, it could be a path or URL
+        url = input;
+      } else {
+        console.error('Invalid audio input:', input);
+        resolve(null);
+        return;
+      }
+
+      const audio = new Audio(url);
+      
+      audio.onended = () => {
+        if (input instanceof Blob) {
+          URL.revokeObjectURL(url);
+        }
+        resolve(audio);
+      };
+
+      audio.onerror = (err) => {
+        console.error('Audio playback error:', err);
+        if (input instanceof Blob) {
+          URL.revokeObjectURL(url);
+        }
+        resolve(null);
+      };
+
+      audio.play().catch(err => {
+        console.error('Failed to play audio:', err);
+        if (input instanceof Blob) {
+          URL.revokeObjectURL(url);
+        }
+        resolve(null);
+      });
+    });
   }, []);
 
   return {

@@ -1,4 +1,5 @@
 import React from 'react';
+import ImageAnalyzer from './ImageAnalyzer';
 
 export const RouteDisplay = ({ route, isLoading }) => {
   if (isLoading) {
@@ -29,6 +30,9 @@ export const RouteDisplay = ({ route, isLoading }) => {
           </div>
         ))}
       </div>
+
+      {/* Image Analysis Section */}
+      <ImageAnalyzer />
     </div>
   );
 };
