@@ -73,3 +73,11 @@ class StepGuidanceResponse(BaseModel):
     format: str = Field(..., description="Audio format (wav)")
     step_index: int = Field(..., description="Index of the step")
     instruction: str = Field(..., description="The instruction that was spoken")
+
+
+class ErrorResponse(BaseModel):
+    """Error response with audio explanation"""
+    error_type: str = Field(..., description="Type of error")
+    error_message: str = Field(..., description="Human-readable error message")
+    audio: str = Field(..., description="Path to audio file with error explanation")
+    format: str = Field(..., description="Audio format (wav)")

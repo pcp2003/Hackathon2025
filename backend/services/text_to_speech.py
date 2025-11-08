@@ -102,7 +102,8 @@ def text_to_speech(data: Union[str, dict], output_file: str = "navigation.wav") 
         for chunk in response:
             f.write(chunk)
 
-    return str(output_path)
+    # Return relative URL path instead of absolute file path
+    return f"/audio/{output_file}"
 
 
 def text_to_speech_stream(text: str, output_file: str = "guidance.wav") -> str:
@@ -140,4 +141,5 @@ def text_to_speech_stream(text: str, output_file: str = "guidance.wav") -> str:
         for chunk in response:
             f.write(chunk)
 
-    return str(output_path)
+    # Return relative URL path instead of absolute file path
+    return f"/audio/{output_file}"

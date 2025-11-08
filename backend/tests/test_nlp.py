@@ -8,7 +8,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from services.nlp import text_to_places, haversine_distance, generate_destination_summary, generate_user_comment_response, speak_user_comment_response
+from services.nlp import (
+    text_to_places, 
+    haversine_distance, 
+    generate_destination_summary, 
+    generate_user_comment_response, 
+    speak_user_comment_response,
+    generate_error_response,
+    speak_error_response
+)
 
 
 # Unit Tests for haversine_distance
@@ -346,4 +354,160 @@ class TestUserCommentProcessing:
         assert result["audio_path"]
         assert ".wav" in result["audio_path"]
         print(f"✅ Audio file created successfully")
+
+
+# Tests for error response handling
+class TestErrorResponses:
+    """Tests for generating user-friendly error messages and audio"""
+    
+    def test_generate_error_distance_exceeded(self):
+        """Test error message when distance exceeds limit"""
+        message = generate_error_response("distance_exceeded")
+        print(f"\n🚫 Distance exceeded error:\n{message}")
+        
+        assert isinstance(message, str)
+        assert len(message) > 0
+        assert "too far" in message.lower() or "exceeds" in message.lower()
+        assert "50" in message  # Should mention 50km limit
+        assert "kilometers" in message.lower() or "km" in message.lower()
+    
+    def test_generate_error_distance_exceeded_with_details(self):
+        """Test error message with specific distance details"""
+        error_details = "Route is 273 kilometers away, maximum is 50 kilometers"
+        message = generate_error_response("distance_exceeded", error_details)
+        print(f"\n🚫 Distance exceeded with details:\n{message}")
+        
+        assert isinstance(message, str)
+        assert "273" in message  # Should include the specific distance
+        assert "50" in message   # Should include the limit
+    
+    def test_generate_error_invalid_destination(self):
+        """Test error message for invalid destination"""
+        message = generate_error_response("invalid_destination")
+        print(f"\n🚫 Invalid destination error:\n{message}")
+        
+        assert isinstance(message, str)
+        assert "destination" in message.lower()
+        assert "not find" in message.lower() or "could not" in message.lower()
+    
+    def test_generate_error_no_route_found(self):
+        """Test error message when no route exists"""
+        message = generate_error_response("no_route_found")
+        print(f"\n🚫 No route found error:\n{message}")
+        
+        assert isinstance(message, str)
+        assert "route" in message.lower()
+        assert "not find" in message.lower() or "could not" in message.lower()
+    
+    def test_generate_error_routing_service_error(self):
+        """Test error message for routing service failure"""
+        message = generate_error_response("routing_service_error")
+        print(f"\n🚫 Routing service error:\n{message}")
+        
+        assert isinstance(message, str)
+        assert "unavailable" in message.lower() or "failed" in message.lower() or "temporarily" in message.lower()
+    
+    def test_generate_error_geocoding_error(self):
+        """Test error message for geocoding failure"""
+        message = generate_error_response("geocoding_error")
+        print(f"\n🚫 Geocoding error:\n{message}")
+        
+        assert isinstance(message, str)
+        assert "coordinates" in message.lower() or "destination" in message.lower()
+    
+    def test_generate_error_unknown(self):
+        """Test error message for unknown error"""
+        message = generate_error_response("unknown")
+        print(f"\n🚫 Unknown error:\n{message}")
+        
+        assert isinstance(message, str)
+        assert len(message) > 0
+        assert "something went wrong" in message.lower() or "sorry" in message.lower()
+    
+    def test_generate_error_with_invalid_type(self):
+        """Test error message with invalid error type"""
+        message = generate_error_response("invalid_error_type")
+        print(f"\n🚫 Invalid error type (should default to unknown):\n{message}")
+        
+        # Should fall back to unknown error message
+        assert isinstance(message, str)
+        assert len(message) > 0
+    
+    @pytest.mark.skipif(
+        not os.getenv("OPENAI_API_KEY"),
+        reason="OPENAI_API_KEY not set"
+    )
+    def test_speak_error_distance_exceeded(self):
+        """Test generating and speaking distance exceeded error"""
+        result = speak_error_response(
+            "distance_exceeded",
+            "Route is 273 km away, maximum is 50 km"
+        )
+        print(f"\n🎵 Generated error message:\n{result['error_message']}")
+        print(f"🎵 Error type: {result['error_type']}")
+        print(f"🎵 Audio file: {result['audio_path']}")
+        
+        assert isinstance(result, dict)
+        assert "error_message" in result
+        assert "audio_path" in result
+        assert "error_type" in result
+        assert result["error_type"] == "distance_exceeded"
+        assert result["error_message"]
+        assert result["audio_path"]
+        assert ".wav" in result["audio_path"]
+        print(f"✅ Error audio file created successfully")
+    
+    @pytest.mark.skipif(
+        not os.getenv("OPENAI_API_KEY"),
+        reason="OPENAI_API_KEY not set"
+    )
+    def test_speak_error_routing_service_error(self):
+        """Test generating and speaking routing service error"""
+        result = speak_error_response(
+            "routing_service_error",
+            "OSRM API timeout"
+        )
+        print(f"\n🎵 Routing service error audio generated")
+        print(f"🎵 Message: {result['error_message'][:50]}...")
+        
+        assert isinstance(result, dict)
+        assert "error_message" in result
+        assert "audio_path" in result
+        assert "error_type" in result
+        assert result["error_type"] == "routing_service_error"
+        print(f"✅ Routing error audio file created successfully")
+    
+    @pytest.mark.skipif(
+        not os.getenv("OPENAI_API_KEY"),
+        reason="OPENAI_API_KEY not set"
+    )
+    def test_speak_error_invalid_destination(self):
+        """Test generating and speaking invalid destination error"""
+        result = speak_error_response(
+            "invalid_destination",
+            "Could not find 'Xyztown'"
+        )
+        print(f"\n🎵 Invalid destination error audio generated")
+        print(f"🎵 Message: {result['error_message'][:50]}...")
+        
+        assert isinstance(result, dict)
+        assert "error_message" in result
+        assert "audio_path" in result
+        assert "error_type" in result
+        print(f"✅ Invalid destination error audio file created successfully")
+    
+    @pytest.mark.skipif(
+        not os.getenv("OPENAI_API_KEY"),
+        reason="OPENAI_API_KEY not set"
+    )
+    def test_speak_error_no_details(self):
+        """Test generating error audio without additional details"""
+        result = speak_error_response("unknown")
+        print(f"\n🎵 Unknown error audio generated (no details)")
+        print(f"🎵 Message: {result['error_message'][:50]}...")
+        
+        assert isinstance(result, dict)
+        assert result["error_message"]
+        assert result["audio_path"]
+        print(f"✅ Unknown error audio file created successfully")
 

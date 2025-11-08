@@ -1,11 +1,17 @@
 """
 Navigation endpoints for voice-based routing
 """
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 import logging
+import json
 
 from services.transcription import transcribe_audio
-from services.nlp import text_to_places, speak_destination_summary, speak_user_comment_response
+from services.nlp import (
+    text_to_places, 
+    speak_destination_summary, 
+    speak_user_comment_response,
+    speak_error_response
+)
 from services.routing import calculate_route
 from services.text_to_speech import text_to_speech, text_to_speech_stream, _format_initial_guidance
 from schemas.navigation import (
@@ -19,6 +25,7 @@ from schemas.navigation import (
     InitialGuidanceResponse,
     StepGuidanceRequest,
     StepGuidanceResponse,
+    ErrorResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,7 +91,7 @@ async def analyze_destination(text: str = Form(...)):
         raise
 
 
-@router.post("/route", response_model=RouteResponse)
+@router.post("/route")
 async def get_route(
     origin_lat: float = Form(...),
     origin_lon: float = Form(...),
@@ -94,17 +101,43 @@ async def get_route(
     """
     Calculate optimal route using OSRM
     
+    Only routes under 50 km are calculated. Longer routes are not supported.
+    
     - **origin_lat**: Starting point latitude
     - **origin_lon**: Starting point longitude
     - **dest_lat**: Destination latitude
     - **dest_lon**: Destination longitude
-    - Returns: Route with steps, distance, and duration
+    - Returns: Route with steps, distance, and duration (if under 50 km)
+    
+    On error, returns audio explanation of what went wrong
     """
     try:
         route_data = await calculate_route(
             origin=(origin_lat, origin_lon),
             destination=(dest_lat, dest_lon)
         )
+        
+        # Check if route distance exceeds 50 km
+        total_distance_km = route_data["total_distance"] / 1000
+        max_distance_km = 50
+        
+        if total_distance_km > max_distance_km:
+            logger.warning(
+                f"Route distance ({total_distance_km:.2f} km) exceeds maximum limit ({max_distance_km} km). "
+                "Route calculation rejected."
+            )
+            error_details = f"Route is {total_distance_km:.1f} kilometers away, maximum is {max_distance_km} kilometers"
+            
+            # Generate error response with audio
+            error_response = speak_error_response("distance_exceeded", error_details)
+            
+            # Return error response as JSON instead of raising exception
+            return {
+                "success": False,
+                "error_type": "distance_exceeded",
+                "error_message": error_response["error_message"],
+                "audio": error_response["audio_path"]
+            }
         
         # Store route state for later use in location updates
         current_route_state["steps"] = route_data["steps"]
@@ -113,14 +146,43 @@ async def get_route(
         current_route_state["current_step_index"] = 0
         
         steps = [RouteStep(**step) for step in route_data["steps"]]
-        return RouteResponse(
-            steps=steps,
-            total_distance=route_data["total_distance"],
-            total_duration=route_data["total_duration"]
-        )
+        return {
+            "success": True,
+            "steps": [step.model_dump() for step in steps],
+            "total_distance": route_data["total_distance"],
+            "total_duration": route_data["total_duration"]
+        }
     except Exception as e:
-        logger.error(f"Routing error: {str(e)}")
-        raise
+        # Handle other errors (routing service errors, etc)
+        error_msg = str(e)
+        logger.error(f"Routing error: {error_msg}")
+        
+        # Determine error type based on error message
+        if "routing" in error_msg.lower() or "osrm" in error_msg.lower():
+            error_type = "routing_service_error"
+        elif "no route" in error_msg.lower():
+            error_type = "no_route_found"
+        else:
+            error_type = "unknown"
+        
+        try:
+            error_response = speak_error_response(error_type, error_msg)
+            
+            return {
+                "success": False,
+                "error_type": error_type,
+                "error_message": error_response["error_message"],
+                "audio": error_response["audio_path"]
+            }
+        except Exception as audio_error:
+            logger.error(f"Failed to generate error audio: {str(audio_error)}")
+            # Return error without audio if generation fails
+            return {
+                "success": False,
+                "error_type": error_type,
+                "error_message": f"Routing error: {error_msg}",
+                "audio": None
+            }
 
 
 @router.post("/speak", response_model=SpeakResponse)

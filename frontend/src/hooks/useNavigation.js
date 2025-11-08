@@ -20,9 +20,22 @@ export const useNavigation = (currentLocation) => {
   const playAudioFile = useCallback((audioPath) => {
     return new Promise((resolve) => {
       // Converter para URL absoluta se necessário
-      const audioUrl = audioPath.startsWith('http') 
-        ? audioPath 
-        : `${apiClient.getBaseUrl()}${audioPath}`;
+      let audioUrl;
+      if (audioPath.startsWith('http')) {
+        // Already absolute URL
+        audioUrl = audioPath;
+      } else if (audioPath.startsWith('/audio/')) {
+        // Relative path from API, construct full URL
+        audioUrl = `${apiClient.getBaseUrl()}${audioPath}`;
+      } else if (audioPath.startsWith('/')) {
+        // Root-relative path
+        audioUrl = `${apiClient.getBaseUrl()}${audioPath}`;
+      } else {
+        // Assume it's a relative filename
+        audioUrl = `${apiClient.getBaseUrl()}/audio/${audioPath}`;
+      }
+      
+      console.log('Playing audio from URL:', audioUrl);
       
       const audio = new Audio(audioUrl);
       audioRef.current = audio;
@@ -34,13 +47,13 @@ export const useNavigation = (currentLocation) => {
       };
 
       audio.onerror = (error) => {
-        console.error('Error playing audio:', error);
+        console.error('Error playing audio from:', audioUrl, error);
         setIsPlayingAudio(false);
         resolve();
       };
 
       audio.play().catch((err) => {
-        console.error('Error starting audio:', err);
+        console.error('Error starting audio playback:', err);
         setIsPlayingAudio(false);
         resolve();
       });
@@ -107,6 +120,20 @@ export const useNavigation = (currentLocation) => {
             destinationResult.latitude,
             destinationResult.longitude
           );
+
+          // Check if route calculation was successful
+          if (routeResult.success === false) {
+            // Route calculation failed - play error audio silently (no text display)
+            if (routeResult.audio) {
+              await playAudioFile(routeResult.audio);
+              // Don't set error message - just play audio
+              return;
+            }
+            // If no audio, then show error message
+            setError(routeResult.error_message || 'Could not calculate route');
+            return;
+          }
+
           setRoute(routeResult);
           setCurrentStepIndex(0);
 

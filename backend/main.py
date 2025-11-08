@@ -23,13 +23,22 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
-# CORS Configuration
+# CORS Configuration - MUST be added before routes
+# Allow requests from frontend running on different port
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",      # React dev server
+        "http://localhost:5173",      # Vite dev server
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",      # Self (for testing)
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    max_age=600,  # Cache preflight requests for 10 minutes
+    expose_headers=["*"],
 )
 
 # Serve static audio files

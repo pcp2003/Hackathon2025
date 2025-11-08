@@ -47,28 +47,32 @@ def mock_env(monkeypatch):
 
 
 def test_text_to_speech_creates_file(sample_data, mock_elevenlabs_client, mock_env, audio_dir):
-    """Testa se o arquivo WAV é criado com sucesso na pasta audio_output."""
+    """Testa se o arquivo WAV é criado com sucesso na pasta audio_output e retorna URL relativa."""
     output_path = text_to_speech(sample_data, output_file="navigation.wav")
 
-    # Verifica se o ficheiro foi criado
-    assert os.path.exists(output_path), "O ficheiro .wav não foi criado."
+    # Verifica se retorna URL relativa (para servir via /audio endpoint)
+    assert output_path == "/audio/navigation.wav", f"Expected '/audio/navigation.wav', got {output_path}"
     
-    # Verifica se está na pasta audio_output
-    assert "audio_output" in output_path, "O ficheiro não está na pasta audio_output."
+    # Verifica se o arquivo foi criado no disco
+    file_path = Path(__file__).parent.parent / "audio_output" / "navigation.wav"
+    assert file_path.exists(), "O ficheiro .wav não foi criado no disco."
     
     # Verifica se o ficheiro não está vazio
-    file_size = os.path.getsize(output_path)
+    file_size = file_path.stat().st_size
     assert file_size > 0, "O ficheiro gerado está vazio."
 
 
 def test_text_to_speech_with_different_filename(sample_data, mock_elevenlabs_client, mock_env, audio_dir):
-    """Testa com nome de ficheiro customizado."""
+    """Testa com nome de ficheiro customizado e retorna URL relativa."""
     custom_filename = "route_test.wav"
     output_path = text_to_speech(sample_data, output_file=custom_filename)
 
-    assert os.path.exists(output_path)
-    assert "audio_output" in output_path
-    assert custom_filename in output_path
+    # Verifica se retorna URL relativa
+    assert output_path == f"/audio/{custom_filename}", f"Expected '/audio/{custom_filename}', got {output_path}"
+    
+    # Verifica se o arquivo foi criado no disco
+    file_path = Path(__file__).parent.parent / "audio_output" / custom_filename
+    assert file_path.exists(), f"Arquivo {custom_filename} não foi criado no disco."
 
 
 def test_text_to_speech_calls_elevenlabs_correctly(sample_data, mock_elevenlabs_client, mock_env, audio_dir):
@@ -97,14 +101,17 @@ def test_text_to_speech_missing_api_key(sample_data, monkeypatch, audio_dir):
 
 
 def test_text_to_speech_stream_creates_file(mock_elevenlabs_client, mock_env, audio_dir):
-    """Testa se text_to_speech_stream cria arquivo para instruções individuais."""
+    """Testa se text_to_speech_stream cria arquivo para instruções individuais e retorna URL relativa."""
     text = "Turn left on 5th Avenue for 150 meters."
     output_path = text_to_speech_stream(text, output_file="step_instruction.wav")
 
-    assert os.path.exists(output_path)
-    assert "audio_output" in output_path
-    assert "step_instruction.wav" in output_path
-    assert os.path.getsize(output_path) > 0
+    # Verifica se retorna URL relativa
+    assert output_path == "/audio/step_instruction.wav", f"Expected '/audio/step_instruction.wav', got {output_path}"
+    
+    # Verifica se o arquivo foi criado no disco
+    file_path = Path(__file__).parent.parent / "audio_output" / "step_instruction.wav"
+    assert file_path.exists(), "Arquivo não foi criado no disco."
+    assert file_path.stat().st_size > 0, "Arquivo está vazio."
 
 
 def test_text_to_speech_stream_calls_elevenlabs(mock_elevenlabs_client, mock_env, audio_dir):

@@ -402,6 +402,122 @@ def speak_user_comment_response(user_comment: str, context: dict = None, output_
         raise
 
 
+def generate_error_response(error_type: str, error_details: str = None) -> str:
+    """
+    Generate a user-friendly error message explaining why the route could not be calculated.
+    
+    Args:
+        error_type: Type of error. Options:
+            - "distance_exceeded": Route is too far
+            - "invalid_destination": Destination could not be found
+            - "no_route_found": No route exists between origin and destination
+            - "routing_service_error": OSRM service error
+            - "geocoding_error": Could not find coordinates
+            - "unknown": Generic error
+        error_details: Optional additional error details to include
+        
+    Returns:
+        str: Natural language error message to be read aloud to user
+        
+    Example:
+        msg = generate_error_response(
+            "distance_exceeded",
+            "Route is 273 kilometers away, maximum is 50 kilometers"
+        )
+        # Returns: "I'm sorry, I could not calculate a route because the destination is too far away. 
+        #          The distance exceeds 50 kilometers. Please try a closer destination."
+    """
+    error_messages = {
+        "distance_exceeded": (
+            "I'm sorry, I could not calculate a route because the destination is too far away. "
+            "The maximum distance I can navigate is 50 kilometers. Please try a closer destination."
+        ),
+        "invalid_destination": (
+            "I'm sorry, I could not find the destination you mentioned. "
+            "Please try saying the destination address again, or provide more details like the city or street name."
+        ),
+        "no_route_found": (
+            "I'm sorry, I could not find a route to your destination. "
+            "This might be because there is no pedestrian path available. Please try a different destination."
+        ),
+        "routing_service_error": (
+            "I'm sorry, the navigation service is temporarily unavailable. "
+            "Please try again in a moment."
+        ),
+        "geocoding_error": (
+            "I'm sorry, I could not find the coordinates for your destination. "
+            "Please try saying the destination again with more details."
+        ),
+        "unknown": (
+            "I'm sorry, something went wrong while calculating your route. "
+            "Please try again or say your destination once more."
+        )
+    }
+    
+    message = error_messages.get(error_type, error_messages["unknown"])
+    
+    # Add details if provided
+    if error_details:
+        message = f"{message} Details: {error_details}"
+    
+    logger.info(f"Generated error response for {error_type}: {message}")
+    return message
+
+
+def speak_error_response(error_type: str, error_details: str = None, output_file: str = "error_response.wav") -> dict:
+    """
+    Generate an error message and convert it to speech for the user.
+    
+    This function informs the user why their route request failed and suggests next steps,
+    allowing them to refine their request and try again.
+    
+    Args:
+        error_type: Type of error (distance_exceeded, invalid_destination, etc.)
+        error_details: Optional error details to include
+        output_file: Output filename for the audio file
+        
+    Returns:
+        dict with:
+        - error_message: The error explanation text
+        - audio_path: Path to the generated audio file
+        - error_type: The type of error
+        
+    Example:
+        result = speak_error_response(
+            "distance_exceeded",
+            "Route is 273 km away, maximum is 50 km"
+        )
+        # Returns: {
+        #     "error_message": "I'm sorry, the destination is too far...",
+        #     "audio_path": "/app/audio_output/error_response.wav",
+        #     "error_type": "distance_exceeded"
+        # }
+    """
+    try:
+        # Import here to avoid circular imports
+        from services.text_to_speech import text_to_speech
+        
+        # Generate error message
+        error_message = generate_error_response(error_type, error_details)
+        
+        logger.info(f"Speaking error response for {error_type}")
+        
+        # Convert error message to speech
+        audio_path = text_to_speech(error_message, output_file=output_file)
+        
+        logger.info(f"Error response audio saved to: {audio_path}")
+        
+        return {
+            "error_message": error_message,
+            "audio_path": audio_path,
+            "error_type": error_type
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to generate and speak error response: {str(e)}")
+        raise
+
+
 def validate_and_correct_location(original_address: str, destination_coords: dict, user_coords: dict) -> dict:
     """
     Validate if the destination is within 25km of the user's location.

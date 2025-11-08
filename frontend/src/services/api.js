@@ -14,6 +14,12 @@ const apiClient = {
       const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
         method: 'POST',
         body: formData,
+        // CORS headers - allow credentials and specify content type
+        headers: {
+          'Accept': '*/*',
+        },
+        credentials: 'include', // Include credentials if needed
+        mode: 'cors', // Explicitly enable CORS
       });
 
       if (!response.ok) {
