@@ -1,33 +1,33 @@
-/* Color Palette - Futuristic & High Contrast for Accessibility */
+/* Color Palette - Minimalist Nike-Style */
 :root {
-  /* Primary Colors - Neon gradient aesthetic */
-  --primary-color: #00d4ff;
-  --primary-dark: #0099cc;
-  --primary-light: #e0f7ff;
+  /* Primary Colors - Clean neutral palette */
+  --primary-color: #000000;
+  --primary-dark: #111111;
+  --primary-light: #f5f5f5;
   
-  /* Accent Colors - Vibrant neon */
-  --accent-color: #ff006e;
-  --accent-light: #ffe0eb;
+  /* Accent Colors - Subtle accent */
+  --accent-color: #666666;
+  --accent-light: #e8e8e8;
   
-  /* Status Colors - High contrast */
-  --success-color: #00ff88;
-  --danger-color: #ff0055;
-  --warning-color: #ffaa00;
-  --info-color: #00bbff;
+  /* Status Colors - Clean and simple */
+  --success-color: #4caf50;
+  --danger-color: #e74c3c;
+  --warning-color: #f39c12;
+  --info-color: #3498db;
   
-  /* Text Colors - Maximum contrast for screen readers */
-  --text-primary: #000000;
+  /* Text Colors - Simple contrast */
+  --text-primary: #1a1a1a;
   --text-secondary: #ffffff;
-  --text-light: #333333;
+  --text-light: #666666;
   
-  /* Background Colors - Dark mode optimized */
-  --bg-primary: #0a0e27;
-  --bg-secondary: #1a1f3a;
+  /* Background Colors - Light and clean */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f8f8;
   --bg-white: #ffffff;
   
-  /* Border Colors - High visibility */
-  --border-color: #00d4ff;
-  --border-light: #1a1f3a;
+  /* Border Colors - Subtle */
+  --border-color: #e0e0e0;
+  --border-light: #f0f0f0;
   
   /* Typography - Optimized for screen readers and dyslexia-friendly fonts */
   --font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -56,13 +56,13 @@
   --radius-lg: 16px;
   --radius-full: 50px;
   
-  /* Shadows - Cyberpunk glow effects */
-  --shadow-xs: 0 0 8px rgba(0, 212, 255, 0.1);
-  --shadow-sm: 0 0 12px rgba(0, 212, 255, 0.2);
-  --shadow-md: 0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(255, 0, 110, 0.1);
-  --shadow-lg: 0 0 30px rgba(0, 212, 255, 0.4), 0 0 60px rgba(255, 0, 110, 0.2);
-  --shadow-xl: 0 0 40px rgba(0, 212, 255, 0.5), 0 0 80px rgba(255, 0, 110, 0.3);
-  --shadow-glow: 0 0 30px rgba(0, 212, 255, 0.6), 0 0 60px rgba(255, 0, 110, 0.3);
+  /* Shadows - Subtle and clean */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.18);
+  --shadow-glow: 0 2px 8px rgba(0, 0, 0, 0.1);
   
   /* Transitions - Smooth animations */
   --transition-fast: 0.15s ease;

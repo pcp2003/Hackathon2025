@@ -13,31 +13,40 @@ export const App = () => {
   return (
     <div className="app">
       <header className="header">
-        <h1>🧭 NaviAccess</h1>
-        <p>Voice Navigation for Everyone</p>
+        <h1>NaviAccess</h1>
+        <p>Voice Navigation for Visually Impaired Users</p>
       </header>
 
       <main className="main-content">
         {displayError && <div className="alert alert-error">{displayError}</div>}
 
         <div className="container">
-          <VoiceInput onTranscribe={handleTranscribe} isLoading={isLoading} />
-
-          {currentLocation && destination && (
-            <Map
-              destination={destination}
-              currentLocation={currentLocation}
-              route={route}
-            />
-          )}
-
-          {destination && (
-            <div className="destination-info">
-              <h2>Destination: {destination.destination}</h2>
+          {!destination && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '70vh',
+              gap: '24px'
+            }}>
+              <VoiceInput onTranscribe={handleTranscribe} isLoading={isLoading} />
             </div>
           )}
 
-          <RouteDisplay route={route} isLoading={isLoading} />
+          {destination && (
+            <>
+              {currentLocation && (
+                <Map
+                  destination={destination}
+                  currentLocation={currentLocation}
+                  route={route}
+                />
+              )}
+
+              <RouteDisplay route={route} isLoading={isLoading} />
+            </>
+          )}
         </div>
       </main>
     </div>

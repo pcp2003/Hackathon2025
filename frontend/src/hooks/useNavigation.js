@@ -94,6 +94,18 @@ export const useNavigation = (currentLocation) => {
   }, [playAudioFile]);
 
   /**
+   * Gera e reproduz áudio de erro
+   */
+  const playErrorGuidance = useCallback(async (errorMessage) => {
+    try {
+      const response = await apiClient.generateGuidance(errorMessage);
+      await playAudioFile(response.audio);
+    } catch (err) {
+      console.error('Error generating error guidance:', err);
+    }
+  }, [playAudioFile]);
+
+  /**
    * Transcreve áudio, análisa destino, calcula rota e reproduz instruções
    */
   const handleTranscribe = useCallback(
@@ -123,14 +135,25 @@ export const useNavigation = (currentLocation) => {
 
           // Check if route calculation was successful
           if (routeResult.success === false) {
-            // Route calculation failed - play error audio silently (no text display)
-            if (routeResult.audio) {
-              await playAudioFile(routeResult.audio);
-              // Don't set error message - just play audio
-              return;
+            // Route calculation failed - play error audio and reset state
+            console.log('Route calculation failed:', routeResult.error_message);
+            
+            // Generate user-friendly error messages
+            let userMessage = '';
+            if (routeResult.error_message.includes('too far away')) {
+              userMessage = 'I cannot calculate the route because the destination is too far away. Please try a closer destination.';
+            } else if (routeResult.error_message.includes('No useful sound')) {
+              userMessage = 'I did not hear anything useful. Please speak your destination again.';
+            } else {
+              userMessage = routeResult.error_message || 'I could not calculate the route. Please try again.';
             }
-            // If no audio, then show error message
-            setError(routeResult.error_message || 'Could not calculate route');
+            
+            // Play error message and wait for it to finish
+            await playErrorGuidance(userMessage);
+            
+            // Then reset state so user can record again
+            setDestination(null);
+            setRoute(null);
             return;
           }
 
@@ -157,7 +180,7 @@ export const useNavigation = (currentLocation) => {
         setIsLoading(false);
       }
     },
-    [currentLocation, playInitialGuidance, playStepGuidance]
+    [currentLocation, playInitialGuidance, playStepGuidance, playErrorGuidance]
   );
 
   /**

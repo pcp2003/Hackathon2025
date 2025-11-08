@@ -6,15 +6,15 @@ export const RouteDisplay = ({ route, isLoading }) => {
   }
 
   if (!route || !route.steps) {
-    return <div className="route-display empty">No route available</div>;
+    return null;
   }
 
   return (
     <div className="route-display">
       <h3>Navigation Steps</h3>
       <div className="route-info">
-        <p>Distance: {(route.total_distance / 1000).toFixed(2)} km</p>
-        <p>Duration: {(route.total_duration / 60).toFixed(0)} minutes</p>
+        <p>Distance: <span>{(route.total_distance / 1000).toFixed(2)} km</span></p>
+        <p>Duration: <span>{(route.total_duration / 60).toFixed(0)} min</span></p>
       </div>
       <div className="steps-list">
         {route.steps.map((step, index) => (

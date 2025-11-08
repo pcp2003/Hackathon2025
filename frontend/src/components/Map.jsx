@@ -2,17 +2,25 @@ import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { MAP_CONFIG } from '../utils/constants';
 
+// Helper function to validate coordinates
+const isValidCoordinate = (location) => {
+  if (!location) return false;
+  return location.latitude !== null && location.latitude !== undefined && 
+         location.longitude !== null && location.longitude !== undefined;
+};
+
 export const Map = ({ destination, currentLocation, route }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    // Don't initialize if we don't have essential data with valid coordinates
+    if (!mapRef.current || !isValidCoordinate(destination)) return;
 
     // Initialize map
     if (!mapInstanceRef.current) {
       mapInstanceRef.current = L.map(mapRef.current).setView(
-        MAP_CONFIG.DEFAULT_CENTER,
+        [destination.latitude, destination.longitude],
         MAP_CONFIG.DEFAULT_ZOOM
       );
       L.tileLayer(MAP_CONFIG.TILE_LAYER, {
@@ -29,7 +37,7 @@ export const Map = ({ destination, currentLocation, route }) => {
     });
 
     // Add current location
-    if (currentLocation) {
+    if (isValidCoordinate(currentLocation)) {
       L.circleMarker([currentLocation.latitude, currentLocation.longitude], {
         radius: 8,
         fillColor: '#007bff',
@@ -43,7 +51,7 @@ export const Map = ({ destination, currentLocation, route }) => {
     }
 
     // Add destination
-    if (destination) {
+    if (isValidCoordinate(destination)) {
       L.marker([destination.latitude, destination.longitude], {
         icon: L.icon({
           iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="red" width="32" height="32"><circle cx="12" cy="12" r="10"/></svg>',
@@ -76,7 +84,7 @@ export const Map = ({ destination, currentLocation, route }) => {
     }
 
     // Fit bounds
-    if (currentLocation && destination) {
+    if (isValidCoordinate(currentLocation) && isValidCoordinate(destination)) {
       const bounds = L.latLngBounds(
         [currentLocation.latitude, currentLocation.longitude],
         [destination.latitude, destination.longitude]

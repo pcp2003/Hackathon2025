@@ -22,6 +22,12 @@ const apiClient = {
         mode: 'cors', // Explicitly enable CORS
       });
 
+      // Handle 422 Unprocessable Entity (no useful sound recognized) silently
+      if (response.status === 422) {
+        console.log(`Silent error for ${endpoint}: 422 - No useful sound recognized`);
+        return { success: false, error_message: 'No useful sound recognized' };
+      }
+
       if (!response.ok) {
         throw new Error(`API Error: ${response.statusText}`);
       }

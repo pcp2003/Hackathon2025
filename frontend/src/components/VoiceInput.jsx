@@ -43,7 +43,7 @@ export const VoiceInput = ({ onTranscribe, isLoading }) => {
         onClick={isRecording ? stopRecording : startRecording}
         disabled={isLoading}
       >
-        {isRecording ? '🔴 Stop Recording' : '🎤 Start Recording'}
+        {isRecording ? 'Stop Recording' : 'Start Recording'}
       </button>
     </div>
   );
