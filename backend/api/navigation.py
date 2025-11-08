@@ -2,6 +2,9 @@
 Navigation endpoints for voice-based routing
 """
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi.responses import FileResponse
+from pathlib import Path
+import os
 import logging
 import json
 
@@ -196,14 +199,15 @@ async def speak_text(text: str = Form(...)):
     try:
         # text_to_speech_stream generates individual step audio
         audio_path = text_to_speech_stream(text, output_file="guidance.wav")
-        
-        # Convert file path to URL
-        audio_url = f"/audio/guidance.wav"
-        
-        return SpeakResponse(
-            audio=audio_url,
-            format="wav"
-        )
+        # If service returns a URL path like "/audio/<file>", convert to filesystem path
+        if isinstance(audio_path, str) and audio_path.startswith('/audio/'):
+            filename = audio_path.split('/audio/', 1)[1]
+            audio_fs_path = str(Path(__file__).parent.parent / 'audio_output' / filename)
+        else:
+            audio_fs_path = audio_path
+
+        # Return the file directly so the frontend receives binary audio (avoids a second request)
+        return FileResponse(audio_fs_path, media_type="audio/wav", filename="guidance.wav")
     except Exception as e:
         logger.error(f"TTS error: {str(e)}")
         raise
@@ -240,15 +244,13 @@ async def speak_initial_guidance(
             guidance_text,
             output_file="initial_guidance.wav"
         )
-        
-        # Convert file path to URL
-        audio_url = f"/audio/initial_guidance.wav"
-        
-        return InitialGuidanceResponse(
-            audio=audio_url,
-            format="wav",
-            message=guidance_text
-        )
+        if isinstance(audio_path, str) and audio_path.startswith('/audio/'):
+            filename = audio_path.split('/audio/', 1)[1]
+            audio_fs_path = str(Path(__file__).parent.parent / 'audio_output' / filename)
+        else:
+            audio_fs_path = audio_path
+
+        return FileResponse(audio_fs_path, media_type="audio/wav", filename="initial_guidance.wav")
     except Exception as e:
         logger.error(f"Initial guidance TTS error: {str(e)}")
         raise
@@ -279,16 +281,13 @@ async def speak_step_guidance(
             step_text,
             output_file=output_filename
         )
-        
-        # Convert file path to URL
-        audio_url = f"/audio/{output_filename}"
-        
-        return StepGuidanceResponse(
-            audio=audio_url,
-            format="wav",
-            step_index=step_index,
-            instruction=instruction
-        )
+        if isinstance(audio_path, str) and audio_path.startswith('/audio/'):
+            filename = audio_path.split('/audio/', 1)[1]
+            audio_fs_path = str(Path(__file__).parent.parent / 'audio_output' / filename)
+        else:
+            audio_fs_path = audio_path
+
+        return FileResponse(audio_fs_path, media_type="audio/wav", filename=output_filename)
     except Exception as e:
         logger.error(f"Step guidance TTS error: {str(e)}")
         raise

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const RouteDisplay = ({ route, isLoading }) => {
+export const RouteDisplay = ({ route, isLoading, playStepGuidance, isPlayingAudio }) => {
   if (isLoading) {
     return <div className="route-display loading">Loading route...</div>;
   }
@@ -25,6 +25,15 @@ export const RouteDisplay = ({ route, isLoading }) => {
               <small className="distance">
                 {(step.distance).toFixed(0)}m • {(step.duration).toFixed(0)}s
               </small>
+            </div>
+            <div className="step-actions">
+              <button
+                className="play-step-button"
+                onClick={() => playStepGuidance(index, step.instruction)}
+                disabled={isPlayingAudio}
+              >
+                ▶️ Play
+              </button>
             </div>
           </div>
         ))}

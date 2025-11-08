@@ -8,9 +8,38 @@ export const useAudio = () => {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const audioContextRef = useRef(null);
+  const audioUnlockedRef = useRef(false);
+
+  const _unlockAudio = async () => {
+    try {
+      if (!audioContextRef.current) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioContextRef.current = new AC();
+      }
+
+      if (audioContextRef.current && !audioUnlockedRef.current) {
+        // resume the context on user gesture to unlock audio on iOS
+        await audioContextRef.current.resume();
+
+        // play a tiny silent buffer to ensure the output is unlocked
+        const buffer = audioContextRef.current.createBuffer(1, 1, 22050);
+        const src = audioContextRef.current.createBufferSource();
+        src.buffer = buffer;
+        src.connect(audioContextRef.current.destination);
+        src.start(0);
+        audioUnlockedRef.current = true;
+      }
+    } catch (err) {
+      // ignore errors; unlocking is best-effort
+      console.warn('Audio unlock failed:', err);
+    }
+  };
 
   const startRecording = useCallback(async () => {
     try {
+      // Try to unlock audio on the first user gesture
+      await _unlockAudio();
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
@@ -40,6 +69,8 @@ export const useAudio = () => {
 
         // Stop all tracks
         mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+        // Ensure audio is unlocked (another user gesture boundary)
+        _unlockAudio().catch(() => {});
 
         setIsRecording(false);
         resolve(audioBlob);

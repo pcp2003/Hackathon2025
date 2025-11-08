@@ -38,10 +38,17 @@ export const useNavigation = (currentLocation) => {
       console.log('Playing audio from URL:', audioUrl);
       
       const audio = new Audio(audioUrl);
+      // iOS-friendly attributes
+      audio.playsInline = true;
+      audio.preload = 'auto';
+      audio.muted = false;
+      audio.volume = 1.0;
+
       audioRef.current = audio;
       setIsPlayingAudio(true);
 
       audio.onended = () => {
+        console.log('Audio ended');
         setIsPlayingAudio(false);
         resolve();
       };
@@ -52,11 +59,59 @@ export const useNavigation = (currentLocation) => {
         resolve();
       };
 
-      audio.play().catch((err) => {
-        console.error('Error starting audio playback:', err);
+      // log play promise result
+      const p = audio.play();
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          console.log('Audio playback started');
+        }).catch((err) => {
+          console.error('Error starting audio (promise):', err);
+          setIsPlayingAudio(false);
+          resolve();
+        });
+      }
+    });
+  }, []);
+
+  // Play an audio Blob directly
+  const playAudioBlob = useCallback((audioBlob) => {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(audioBlob);
+      const audio = new Audio(url);
+      // iOS-friendly attributes
+      audio.playsInline = true;
+      audio.preload = 'auto';
+      audio.muted = false;
+      audio.volume = 1.0;
+
+      audioRef.current = audio;
+      setIsPlayingAudio(true);
+
+      audio.onended = () => {
+        console.log('Audio blob ended');
         setIsPlayingAudio(false);
+        URL.revokeObjectURL(url);
         resolve();
-      });
+      };
+
+      audio.onerror = (error) => {
+        console.error('Error playing audio blob:', error);
+        setIsPlayingAudio(false);
+        URL.revokeObjectURL(url);
+        resolve();
+      };
+
+      const p = audio.play();
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          console.log('Audio blob playback started');
+        }).catch((err) => {
+          console.error('Error starting audio blob (promise):', err);
+          setIsPlayingAudio(false);
+          URL.revokeObjectURL(url);
+          resolve();
+        });
+      }
     });
   }, []);
 
@@ -71,11 +126,18 @@ export const useNavigation = (currentLocation) => {
         routeData.total_distance,
         routeData.total_duration
       );
-      await playAudioFile(response.audio);
+      // Response may be a Blob (binary audio) or a JSON object with audio path
+      if (response instanceof Blob) {
+        await playAudioBlob(response);
+      } else if (response && response.audio) {
+        await playAudioFile(response.audio);
+      } else {
+        console.error('Unexpected TTS response format', response);
+      }
     } catch (err) {
       console.error('Error generating initial guidance:', err);
     }
-  }, [playAudioFile]);
+  }, [playAudioFile, playAudioBlob]);
 
   /**
    * Gera e reproduz áudio para um passo específico
@@ -87,7 +149,13 @@ export const useNavigation = (currentLocation) => {
         instruction,
         stepIndex + 1 // User-facing step number
       );
-      await playAudioFile(response.audio);
+      if (response instanceof Blob) {
+        await playAudioBlob(response);
+      } else if (response && response.audio) {
+        await playAudioFile(response.audio);
+      } else {
+        console.error('Unexpected TTS response format', response);
+      }
     } catch (err) {
       console.error('Error generating step guidance:', err);
     }

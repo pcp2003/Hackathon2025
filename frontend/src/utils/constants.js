@@ -3,7 +3,9 @@
  */
 
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  // Use relative paths by default so frontend (served over HTTPS) calls the same origin
+  // and Nginx can proxy /api to the backend. Override with VITE_API_URL if needed.
+  BASE_URL: import.meta.env.VITE_API_URL || '',
   ENDPOINTS: {
     TRANSCRIBE: '/api/transcribe',
     ANALYZE: '/api/analyze',

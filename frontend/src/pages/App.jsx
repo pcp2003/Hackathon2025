@@ -2,11 +2,12 @@ import React from 'react';
 import VoiceInput from '../components/VoiceInput';
 import Map from '../components/Map';
 import RouteDisplay from '../components/RouteDisplay';
+import EnableAudio from '../components/EnableAudio';
 import { useGeolocation, useNavigation } from '../hooks';
 
 export const App = () => {
   const { location: currentLocation, error: locationError } = useGeolocation();
-  const { destination, route, isLoading, error, handleTranscribe } = useNavigation(currentLocation);
+  const { destination, route, isLoading, error, handleTranscribe, playStepGuidance, isPlayingAudio } = useNavigation(currentLocation);
 
   const displayError = error || locationError;
 
@@ -44,7 +45,7 @@ export const App = () => {
                 />
               )}
 
-              <RouteDisplay route={route} isLoading={isLoading} />
+              <RouteDisplay route={route} isLoading={isLoading} playStepGuidance={playStepGuidance} isPlayingAudio={isPlayingAudio} />
             </>
           )}
         </div>
