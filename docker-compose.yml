@@ -25,6 +25,8 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     container_name: naviacess-backend
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     env_file:
