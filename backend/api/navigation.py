@@ -19,6 +19,9 @@ from schemas.navigation import (
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["navigation"])
 
+# Store current user location
+current_user_location = {"latitude": None, "longitude": None}
+
 
 
 
@@ -39,31 +42,28 @@ async def transcribe(audio: UploadFile = File(...)):
 
 
 @router.post("/analyze", response_model=DestinationResponse)
-async def analyze_destination(
-    text: str = Form(...),
-    user_lat: float = Form(None),
-    user_lon: float = Form(None),
-):
+async def analyze_destination(text: str = Form(...)):
     """
-    Extract destination from natural language using NLP with optional user location context.
-    If user location is provided, GPT will prefer destinations within ~25-30km.
+    Extract destination from natural language using NLP with user location context.
+    Uses the current user location from the last /update-location call.
     
     - **text**: Natural language input describing destination
-    - **user_lat**: (Optional) User's current latitude
-    - **user_lon**: (Optional) User's current longitude
     - Returns: Destination name and coordinates
     """
     try:
         # Get transcription data from text
         transcription_data = {"text": text, "confidence": 1.0}
         
-        # Build user coordinates if provided
+        # Build user coordinates from stored location
         user_coords = None
-        if user_lat is not None and user_lon is not None:
+        if current_user_location["latitude"] is not None and current_user_location["longitude"] is not None:
             user_coords = {
-                "latitude": user_lat,
-                "longitude": user_lon
+                "latitude": current_user_location["latitude"],
+                "longitude": current_user_location["longitude"]
             }
+            logger.info(f"Using user location: {user_coords}")
+        else:
+            logger.warning("No user location available. Using generic analysis.")
         
         # Extract destination address (with or without user location context)
         destination_data = text_to_places(transcription_data, user_coords=user_coords)
@@ -143,6 +143,11 @@ async def update_location(
     - Returns: Route status and whether recalculation is needed
     """
     try:
+        # Store current user location for use in /analyze endpoint
+        current_user_location["latitude"] = latitude
+        current_user_location["longitude"] = longitude
+        logger.info(f"Updated user location: ({latitude}, {longitude})")
+        
         result = await check_route_deviation(
             current=(latitude, longitude),
             destination=(destination_lat, destination_lon)
