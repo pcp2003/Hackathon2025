@@ -13,6 +13,7 @@ load_dotenv()
 openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
+
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
     Calculate the great circle distance between two points 
@@ -196,6 +197,90 @@ def text_to_places(transcription_data: dict, user_coords: dict = None):
 
     print(f"Final result: {json.dumps(result, indent=2)}")
     return result
+
+
+def generate_destination_summary(destination_address: str, destination_coords: dict, user_coords: dict) -> str:
+    """
+    Generate a natural language summary of the destination with distance information.
+    
+    Args:
+        destination_address: The destination address string
+        destination_coords: dict with latitude and longitude of destination
+        user_coords: dict with latitude and longitude of user
+        
+    Returns:
+        str: A natural language description to be read aloud to the user
+        Example: "Your destination is R. Neves Ferreira in Lisbon, Portugal. 
+                 It is zero point seven kilometers away from your current location."
+    """
+    if not destination_coords or not user_coords:
+        return f"Your destination is {destination_address}."
+    
+    dest_lat = destination_coords.get("latitude")
+    dest_lon = destination_coords.get("longitude")
+    user_lat = user_coords.get("latitude")
+    user_lon = user_coords.get("longitude")
+    
+    # Calculate distance
+    distance = haversine_distance(user_lat, user_lon, dest_lat, dest_lon)
+    
+    # Format distance for natural speech
+    if distance < 1:
+        distance_text = f"{distance*1000:.0f} meters"
+    elif distance < 25:
+        distance_text = f"{distance:.1f} kilometers"
+    else:
+        distance_text = f"{distance:.0f} kilometers"
+    
+    # Create natural language summary
+    summary = f"""Your destination is {destination_address}. 
+It is {distance_text} away from your current location. 
+Please confirm if you want to proceed with directions to this location."""
+    
+    return summary.strip()
+
+
+def speak_destination_summary(destination_address: str, destination_coords: dict, user_coords: dict, output_file: str = "destination_confirmation.wav") -> str:
+    """
+    Generate a spoken confirmation of the destination with distance details.
+    
+    Args:
+        destination_address: The destination address string
+        destination_coords: dict with latitude and longitude of destination
+        user_coords: dict with latitude and longitude of user
+        output_file: Output filename for the audio file
+        
+    Returns:
+        str: Path to the generated audio file
+        
+    Example:
+        audio_path = speak_destination_summary(
+            "R. Neves Ferreira, Lisbon, Portugal",
+            {"latitude": 38.7307, "longitude": -9.1299},
+            {"latitude": 38.7369, "longitude": -9.1299}
+        )
+        # Plays: "Your destination is R. Neves Ferreira in Lisbon, Portugal. 
+        #         It is 0.7 kilometers away from your current location. 
+        #         Please confirm if you want to proceed with directions to this location."
+    """
+    try:
+        # Import here to avoid circular imports
+        from services.text_to_speech import text_to_speech
+        
+        # Generate the summary text
+        summary = generate_destination_summary(destination_address, destination_coords, user_coords)
+        
+        logger.info(f"Speaking destination confirmation: {summary}")
+        
+        # Convert to speech
+        audio_path = text_to_speech(summary, output_file=output_file)
+        
+        logger.info(f"Destination confirmation audio saved to: {audio_path}")
+        return audio_path
+        
+    except Exception as e:
+        logger.error(f"Failed to generate destination confirmation audio: {str(e)}")
+        raise
 
 
 def validate_and_correct_location(original_address: str, destination_coords: dict, user_coords: dict) -> dict:
