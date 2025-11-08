@@ -5,7 +5,7 @@ from fastapi import APIRouter, UploadFile, File, Form
 import logging
 
 from services.transcription import transcribe_audio
-from services.nlp import text_to_places
+from services.nlp import text_to_places, speak_destination_summary, speak_user_comment_response
 from services.routing import calculate_route
 from services.text_to_speech import text_to_speech, text_to_speech_stream, _format_initial_guidance
 from schemas.navigation import (
@@ -261,6 +261,49 @@ async def update_location(
         return LocationUpdateResponse(**result)
     except Exception as e:
         logger.error(f"Location update error: {str(e)}")
+        raise
+
+
+@router.post("/user-comment")
+async def process_user_comment(
+    text: str = Form(...),
+    destination_address: str = Form(None),
+    destination_distance: float = Form(None),
+    route_instruction: str = Form(None),
+):
+    """
+    Process user comments/feedback and generate intelligent voice responses.
+    
+    - **text**: User's spoken comment or feedback (from transcription)
+    - **destination_address**: Optional current destination
+    - **destination_distance**: Optional distance to destination in km
+    - **route_instruction**: Optional current navigation instruction
+    - Returns: Response text and audio path
+    """
+    try:
+        # Build context from optional parameters
+        context = {}
+        if destination_address:
+            context["current_destination"] = destination_address
+        if destination_distance is not None:
+            context["current_distance"] = destination_distance
+        if route_instruction:
+            context["current_route_step"] = route_instruction
+        
+        # Generate response and convert to speech
+        result = speak_user_comment_response(
+            text,
+            context=context if context else None
+        )
+        
+        return {
+            "response_text": result["response_text"],
+            "audio": result["audio_path"],
+            "format": "wav",
+            "message": result["message"]
+        }
+    except Exception as e:
+        logger.error(f"User comment processing error: {str(e)}")
         raise
 
 
