@@ -37,3 +37,6 @@ class LocationUpdateResponse(BaseModel):
     on_route: bool = Field(..., description="Whether user is on the calculated route")
     needs_recalculation: bool = Field(..., description="Whether route needs recalculation")
     message: str = Field(..., description="Status message")
+
+class ImageAnalysisResponse(BaseModel):
+    description: str
