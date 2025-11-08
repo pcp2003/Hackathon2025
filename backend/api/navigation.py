@@ -7,7 +7,7 @@ import logging
 from services.transcription import transcribe_audio
 from services.nlp import text_to_places
 from services.routing import calculate_route
-from services.text_to_speech import generate_audio_guidance
+from services.text_to_speech import text_to_speech
 from schemas.navigation import (
     TranscribeResponse,
     DestinationResponse,
@@ -89,15 +89,17 @@ async def get_route(
 
 
 @router.post("/speak")
-async def text_to_speech(text: str = Form(...)):
+async def speak_text(text: str = Form(...)):
     """
-    Convert text to speech audio using ElevenLabs TTS
-    
+    Convert text to speech audio.
+
     - **text**: Instruction text to convert to audio
-    - Returns: Audio file in MP3 format
+    - Returns: Audio file path and format
     """
     try:
-        audio_content = await generate_audio_guidance(text)
+        # text_to_speech is implemented as a synchronous helper that writes a
+        # file and returns the filename. Call it directly (do not await).
+        audio_content = text_to_speech(text)
         return {
             "audio": audio_content,
             "format": "mp3"
