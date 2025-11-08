@@ -3,7 +3,6 @@ import VoiceInput from '../components/VoiceInput';
 import Map from '../components/Map';
 import RouteDisplay from '../components/RouteDisplay';
 import { useGeolocation, useNavigation } from '../hooks';
-import '../styles/index.css';
 
 export const App = () => {
   const { location: currentLocation, error: locationError } = useGeolocation();
@@ -14,7 +13,7 @@ export const App = () => {
   return (
     <div className="app">
       <header className="header">
-        <h1>🧭 NaviAcess</h1>
+        <h1>🧭 NaviAccess</h1>
         <p>Voice Navigation for Everyone</p>
       </header>
 
