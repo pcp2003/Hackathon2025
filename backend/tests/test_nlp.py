@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from services.nlp import text_to_places, haversine_distance, generate_destination_summary
+from services.nlp import text_to_places, haversine_distance, generate_destination_summary, generate_user_comment_response, speak_user_comment_response
 
 
 # Unit Tests for haversine_distance
@@ -250,3 +250,100 @@ class TestTextToPlacesIntegration:
         assert len(result["destination_address"]) > 0
         # Address should be suitable for OSRM geocoding (include location details)
         assert any(part in result["destination_address"].lower() for part in ["colombo", "lisbon", "portugal", "lisboa"])
+
+
+# Tests for user comment processing
+class TestUserCommentProcessing:
+    """Tests for generating responses to user comments and feedback"""
+    
+    @pytest.mark.skipif(
+        not os.getenv("OPENAI_API_KEY"),
+        reason="OPENAI_API_KEY not set"
+    )
+    def test_generate_response_destination_too_far(self):
+        """Test response when user says destination is too far"""
+        response = generate_user_comment_response(
+            "The destination seems too far",
+            context={
+                "current_destination": "Porto",
+                "current_distance": 273
+            }
+        )
+        print(f"\n💬 Response to 'destination too far':\n{response}")
+        
+        assert isinstance(response, str)
+        assert len(response) > 0
+        assert "i" in response.lower() or "understand" in response.lower() or "porto" in response.lower()
+    
+    @pytest.mark.skipif(
+        not os.getenv("OPENAI_API_KEY"),
+        reason="OPENAI_API_KEY not set"
+    )
+    def test_generate_response_change_destination(self):
+        """Test response when user wants to change destination"""
+        response = generate_user_comment_response(
+            "Can I change my destination?"
+        )
+        print(f"\n💬 Response to 'change destination':\n{response}")
+        
+        assert isinstance(response, str)
+        assert len(response) > 0
+        assert "destination" in response.lower() or "yes" in response.lower() or "change" in response.lower()
+    
+    @pytest.mark.skipif(
+        not os.getenv("OPENAI_API_KEY"),
+        reason="OPENAI_API_KEY not set"
+    )
+    def test_generate_response_with_route_context(self):
+        """Test response with route navigation context"""
+        response = generate_user_comment_response(
+            "What's next?",
+            context={
+                "current_destination": "Centro Comercial Colombo, Lisbon",
+                "current_distance": 5.5,
+                "current_route_step": "Turn left onto R. Neves Ferreira"
+            }
+        )
+        print(f"\n💬 Response to 'What's next?' with context:\n{response}")
+        
+        assert isinstance(response, str)
+        assert len(response) > 0
+    
+    @pytest.mark.skipif(
+        not os.getenv("OPENAI_API_KEY"),
+        reason="OPENAI_API_KEY not set"
+    )
+    def test_generate_response_feedback(self):
+        """Test response to user feedback"""
+        response = generate_user_comment_response(
+            "This is very helpful, thank you"
+        )
+        print(f"\n💬 Response to positive feedback:\n{response}")
+        
+        assert isinstance(response, str)
+        assert len(response) > 0
+    
+    @pytest.mark.skipif(
+        not os.getenv("OPENAI_API_KEY"),
+        reason="OPENAI_API_KEY not set"
+    )
+    def test_speak_user_comment_response(self):
+        """Test generating and speaking user comment response"""
+        result = speak_user_comment_response(
+            "Is this the right way?",
+            context={
+                "current_destination": "R. Neves Ferreira, Lisbon",
+                "current_distance": 0.7
+            }
+        )
+        print(f"\n🎵 Generated response text:\n{result['response_text']}")
+        print(f"🎵 Audio file: {result['audio_path']}")
+        
+        assert isinstance(result, dict)
+        assert "response_text" in result
+        assert "audio_path" in result
+        assert result["response_text"]
+        assert result["audio_path"]
+        assert ".wav" in result["audio_path"]
+        print(f"✅ Audio file created successfully")
+

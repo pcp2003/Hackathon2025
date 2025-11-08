@@ -283,6 +283,125 @@ def speak_destination_summary(destination_address: str, destination_coords: dict
         raise
 
 
+def generate_user_comment_response(user_comment: str, context: dict = None) -> str:
+    """
+    Generate an intelligent response to user comments/feedback using OpenAI.
+    
+    Args:
+        user_comment: The user's spoken comment or feedback (from transcription)
+        context: Optional dict with additional context:
+            - current_destination: Current destination address
+            - current_distance: Distance to destination in km
+            - current_route_step: Current navigation instruction
+            
+    Returns:
+        str: Natural language response to the user's comment
+        
+    Example:
+        response = generate_user_comment_response(
+            "The destination seems too far",
+            {"current_destination": "Porto", "current_distance": 273}
+        )
+        # Returns: "I understand. Porto is 273 kilometers away. 
+        #          Would you like to search for an alternative destination closer to you?"
+    """
+    context_text = ""
+    if context:
+        if context.get("current_destination"):
+            context_text += f"Current destination: {context['current_destination']}. "
+        if context.get("current_distance"):
+            context_text += f"Distance: {context['current_distance']} km. "
+        if context.get("current_route_step"):
+            context_text += f"Current instruction: {context['current_route_step']}. "
+    
+    prompt = f"""
+    You are a helpful navigation assistant for visually impaired users.
+    The user has made the following comment or request:
+    
+    "{user_comment}"
+    
+    {f"Context: {context_text}" if context_text else ""}
+    
+    Provide a helpful, concise response that:
+    1. Acknowledges their comment
+    2. Provides relevant information or suggestions
+    3. Asks a clarifying question if needed
+    
+    Keep the response short and natural (2-3 sentences max) - it will be read aloud to the user.
+    
+    Respond with just the message, no JSON or formatting.
+    """
+    
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            extra_headers={
+                "OpenAI-Project-Id": os.getenv("OPENAI_PROJECT_ID")
+            } if os.getenv("OPENAI_PROJECT_ID") else {}
+        )
+        
+        assistant_response = response.choices[0].message.content.strip()
+        logger.info(f"Generated response to user comment: {assistant_response}")
+        return assistant_response
+        
+    except Exception as e:
+        logger.error(f"Failed to generate response to user comment: {str(e)}")
+        return "I didn't quite understand. Could you please repeat that?"
+
+
+def speak_user_comment_response(user_comment: str, context: dict = None, output_file: str = "user_response.wav") -> dict:
+    """
+    Process user comment, generate response, and convert to speech.
+    
+    Args:
+        user_comment: The user's spoken comment/feedback (from transcription)
+        context: Optional dict with navigation context (destination, distance, route info)
+        output_file: Output filename for the audio file
+        
+    Returns:
+        dict with:
+        - response_text: The generated response text
+        - audio_path: Path to the generated audio file
+        - message: Summary message
+        
+    Example:
+        result = speak_user_comment_response(
+            "Can I change my destination?",
+            {"current_destination": "Porto", "current_distance": 273}
+        )
+        # Returns: {
+        #     "response_text": "Of course! Would you like to set a new destination?",
+        #     "audio_path": "/app/audio_output/user_response.wav",
+        #     "message": "Response recorded and ready for playback"
+        # }
+    """
+    try:
+        # Import here to avoid circular imports
+        from services.text_to_speech import text_to_speech
+        
+        # Generate response to user's comment
+        response_text = generate_user_comment_response(user_comment, context)
+        
+        logger.info(f"User comment: {user_comment}")
+        logger.info(f"Generated response: {response_text}")
+        
+        # Convert response to speech
+        audio_path = text_to_speech(response_text, output_file=output_file)
+        
+        logger.info(f"User response audio saved to: {audio_path}")
+        
+        return {
+            "response_text": response_text,
+            "audio_path": audio_path,
+            "message": "Response recorded and ready for playback"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to process and speak user comment: {str(e)}")
+        raise
+
+
 def validate_and_correct_location(original_address: str, destination_coords: dict, user_coords: dict) -> dict:
     """
     Validate if the destination is within 25km of the user's location.
