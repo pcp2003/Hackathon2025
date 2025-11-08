@@ -1,17 +1,19 @@
 import os
+from pathlib import Path
 from typing import Union
 
-def text_to_speech(data: Union[str, dict], output_file="navigation.wav", voice="Adam"):
-    """
-    Converte texto ou dados estruturados de navegação para um arquivo WAV.
+from dotenv import load_dotenv
+from elevenlabs.client import ElevenLabs
 
-    - Se 'data' for dict, deve conter:
-        steps: lista de instruções {"instruction": str, "distance": float}
-        total_distance: float
-    - Se 'data' for str, será falado como texto simples.
-    - Usa ElevenLabs se disponível e configurado, senão cai no fallback com pyttsx3.
-    """
-    # Monta o texto a partir de dados estruturados ou texto simples
+
+def _load_env() -> None:
+    """Carrega variáveis de ambiente do arquivo .env."""
+    dotenv_path = Path(__file__).parent.parent / ".env"
+    load_dotenv(dotenv_path)
+
+
+def _format_text(data: Union[str, dict]) -> str:
+    """Formata dados para texto a ser falado."""
     if isinstance(data, dict):
         text_to_speak = "Navigation instructions: "
         for step in data.get("steps", []):
@@ -21,59 +23,51 @@ def text_to_speech(data: Union[str, dict], output_file="navigation.wav", voice="
         text_to_speak += f"Total distance: {data.get('total_distance', 0)} meters."
     else:
         text_to_speak = str(data)
+    return text_to_speak
 
-    # Tenta usar ElevenLabs
-    try:
-        from dotenv import load_dotenv
-        from pathlib import Path
 
-        dotenv_path = Path(__file__).parent.parent / ".env"  # assume que backend/services/text_to_speech.py
-        load_dotenv(dotenv_path)
-        
-        from elevenlabs import AsyncElevenLabs  # versão 1.5.0 usa AsyncElevenLabs ou BaseElevenLabs
+def text_to_speech(data: Union[str, dict], output_file: str = "navigation.wav") -> str:
+    """
+    Converte texto ou dados estruturados de navegação para um arquivo WAV usando ElevenLabs.
 
-        api_key = os.getenv("ELEVENLABS_API_KEY")
-        if not api_key:
-            raise RuntimeError("ELEVENLABS_API_KEY não definida")
+    Args:
+        data: String ou dict com:
+            - steps: lista de {"instruction": str, "distance": float}
+            - total_distance: float
+        output_file: Caminho do arquivo WAV de saída (salvo em audio_output/)
 
-        eleven = AsyncElevenLabs(api_key=api_key)
-        response = eleven.text_to_speech.convert(
-            model_id="eleven_multilingual_v2",
-            voice={"voice_id": voice},
-            text=text_to_speak
-        )
+    Returns:
+        Caminho do arquivo WAV gerado
 
-        # Salva em arquivo WAV
-        with open(output_file, "wb") as f:
-            try:
-                for chunk in response:
-                    f.write(chunk)
-            except TypeError:
-                f.write(response)
+    Raises:
+        RuntimeError: Se ELEVENLABS_API_KEY não estiver configurada
+    """
+    _load_env()
+    text_to_speak = _format_text(data)
 
-    except Exception:
-        # Fallback usando pyttsx3 (voz offline)
-        try:
-            import pyttsx3
-            engine = pyttsx3.init()
-            engine.save_to_file(text_to_speak, output_file)
-            engine.runAndWait()
-        except Exception:
-            # Se pyttsx3 não estiver instalado, cria arquivo dummy audível simples
-            import wave
-            import math
-            import struct
-            duration = 2  # 2 segundos
-            freq = 440    # tom A
-            rate = 22050
-            n_samples = int(duration * rate)
-            with wave.open(output_file, 'w') as wf:
-                wf.setnchannels(1)
-                wf.setsampwidth(2)
-                wf.setframerate(rate)
-                for i in range(n_samples):
-                    val = int(32767.0 * 0.1 * math.sin(2 * math.pi * freq * i / rate))
-                    data_bytes = struct.pack('<h', val)
-                    wf.writeframesraw(data_bytes)
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    if not api_key:
+        raise RuntimeError("ELEVENLABS_API_KEY não definida no arquivo .env")
 
-    return output_file
+    # Cria pasta audio_output se não existir
+    audio_dir = Path(__file__).parent.parent / "audio_output"
+    audio_dir.mkdir(exist_ok=True)
+    
+    # Define caminho completo do arquivo
+    output_path = audio_dir / output_file
+
+    # Inicializa cliente ElevenLabs
+    client = ElevenLabs(api_key=api_key)
+
+    # Gera áudio com ElevenLabs (voz padrão)
+    response = client.text_to_speech.convert(
+        text=text_to_speak,
+        voice_id="21m00Tcm4TlvDq8ikWAM"  # Rachel
+    )
+
+    # Salva em arquivo WAV
+    with open(output_path, "wb") as f:
+        for chunk in response:
+            f.write(chunk)
+
+    return str(output_path)
