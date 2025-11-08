@@ -13,7 +13,7 @@ class TranscribeResponse(BaseModel):
 
 class DestinationResponse(BaseModel):
     """Destination analysis response"""
-    destination: str = Field(..., description="Destination name")
+    destination_address: str = Field(..., description="Destination address")
     latitude: float = Field(..., description="Latitude coordinate")
     longitude: float = Field(..., description="Longitude coordinate")
 
