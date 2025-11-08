@@ -12,6 +12,7 @@ from services.nlp import (
     speak_user_comment_response,
     speak_error_response
 )
+from services.image_alert import analyze_image
 from services.routing import calculate_route
 from services.text_to_speech import text_to_speech, text_to_speech_stream, _format_initial_guidance
 from schemas.navigation import (
@@ -26,7 +27,9 @@ from schemas.navigation import (
     StepGuidanceRequest,
     StepGuidanceResponse,
     ErrorResponse,
+    ImageAnalysisResponse
 )
+
 
 
 logger = logging.getLogger(__name__)
@@ -42,7 +45,25 @@ current_route_state = {
     "current_step_index": 0,
 }
 
+@router.post("/analyze-image", response_model=ImageAnalysisResponse)
+async def analyze_uploaded_image(image: UploadFile = File(...)):
+    """
+    Analyze an uploaded image using GPT-4o-mini and detect potential danger.
+    """
+    try:
+        description = await analyze_image(image)
 
+        return ImageAnalysisResponse(
+            description=description
+        )
+
+    except Exception as e:
+        logger.error(f"Image analysis error: {str(e)}")
+        return ImageAnalysisResponse(
+            description="Unable to analyze image.",
+            danger_detected=False,
+            danger_type=None
+        )
 
 
 @router.post("/transcribe", response_model=TranscribeResponse)
