@@ -30,6 +30,7 @@ class RouteResponse(BaseModel):
     steps: List[RouteStep] = Field(..., description="List of navigation steps")
     total_distance: float = Field(..., description="Total distance in meters")
     total_duration: float = Field(..., description="Total duration in seconds")
+    route_coordinates: Optional[List[List[float]]] = Field(None, description="Route path coordinates [[lat, lon], ...]")
 
 
 class LocationUpdateResponse(BaseModel):

@@ -91,7 +91,7 @@ async def calculate_route(origin: Tuple[float, float], destination: Tuple[float,
         url = f"{osrm_base_url}/{coordinates}"
         
         params = {
-            "overview": "false",
+            "overview": "full",
             "steps": "true",
             "geometries": "geojson"
         }
@@ -130,10 +130,22 @@ async def calculate_route(origin: Tuple[float, float], destination: Tuple[float,
                 "duration": step.get("duration", 0.0)
             })
         
+        # Extract the route geometry (coordinates) for map visualization
+        route_geometry = route.get("geometry", {})
+        route_coords = []
+        if isinstance(route_geometry, dict) and route_geometry.get("coordinates"):
+            # GeoJSON format: [[lon, lat], [lon, lat], ...]
+            # Convert to [[lat, lon], [lat, lon], ...] for Leaflet
+            route_coords = [[lat, lon] for lon, lat in route_geometry.get("coordinates", [])]
+            logger.info(f"Extracted {len(route_coords)} coordinates from OSRM geometry")
+        else:
+            logger.warning(f"No geometry found in OSRM response. Route geometry: {route_geometry}")
+        
         return {
             "steps": steps,
             "total_distance": route.get("distance", 0.0),
-            "total_duration": route.get("duration", 0.0)
+            "total_duration": route.get("duration", 0.0),
+            "route_coordinates": route_coords
         }
         
     except requests.exceptions.RequestException as e:
