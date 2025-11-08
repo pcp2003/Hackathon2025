@@ -30,17 +30,12 @@ class TestTextToPlacesIntegration:
         result = text_to_places(transcription_data)
 
         assert "destination_address" in result
-        assert "latitude" in result
-        assert "longitude" in result
         assert isinstance(result["destination_address"], str)
-        assert isinstance(result["latitude"], (int, float))
-        assert isinstance(result["longitude"], (int, float))
         assert len(result["destination_address"]) > 0
         # Check that the address contains the key part we're looking for
-        assert "R. Neves Ferreira" in result["destination_address"]
-        # Allow ~0.01 degree tolerance for coordinates (roughly 1km)
-        assert result["latitude"] == pytest.approx(38.73077805628982, abs=0.01)
-        assert result["longitude"] == pytest.approx(-9.129930928279666, abs=0.01)
+        assert "Neves Ferreira" in result["destination_address"]
+        # Should include city/country for OSRM geocoding
+        assert any(city in result["destination_address"].lower() for city in ["lisbon", "portugal", "lisboa"])
 
     @pytest.mark.skipif(
         not os.getenv("OPENAI_API_KEY"),
@@ -56,22 +51,18 @@ class TestTextToPlacesIntegration:
         result = text_to_places(transcription_data)
 
         assert "destination_address" in result
-        assert "latitude" in result
-        assert "longitude" in result
         assert isinstance(result["destination_address"], str)
-        assert isinstance(result["latitude"], (int, float))
-        assert isinstance(result["longitude"], (int, float))
         # Should recognize Fonte Luminosa
         assert "fonte" in result["destination_address"].lower() or "luminosa" in result["destination_address"].lower()
-        assert result["latitude"] == pytest.approx(38.73727961098159, abs=0.05)
-        assert result["longitude"] == pytest.approx(-9.130489043391634, abs=0.05)
+        # Should include city/country for OSRM geocoding
+        assert any(city in result["destination_address"].lower() for city in ["lisbon", "portugal", "lisboa"])
 
     @pytest.mark.skipif(
         not os.getenv("OPENAI_API_KEY"),
         reason="OPENAI_API_KEY not set"
     )
     def test_real_api_response_format(self):
-        """Test that real API returns proper JSON format with coordinates"""
+        """Test that real API returns proper OSRM-compatible address format"""
         transcription_data = {
             "text": "Quero ir para o Centro Comercial Colombo",
             "confidence": 0.92
@@ -79,15 +70,10 @@ class TestTextToPlacesIntegration:
 
         result = text_to_places(transcription_data)
 
-        # Verify response is a dictionary with all required fields
+        # Verify response is a dictionary with destination_address
         assert isinstance(result, dict)
         assert "destination_address" in result
-        assert "latitude" in result
-        assert "longitude" in result
         assert isinstance(result["destination_address"], str)
-        assert isinstance(result["latitude"], (int, float))
-        assert isinstance(result["longitude"], (int, float))
-        
-        # Verify coordinates are in reasonable ranges for Earth
-        assert -90 <= result["latitude"] <= 90
-        assert -180 <= result["longitude"] <= 180
+        assert len(result["destination_address"]) > 0
+        # Address should be suitable for OSRM geocoding (include location details)
+        assert any(part in result["destination_address"].lower() for part in ["colombo", "lisbon", "portugal", "lisboa"])

@@ -2,7 +2,7 @@
 Navigation API schemas
 """
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
 
 class TranscribeResponse(BaseModel):
@@ -14,8 +14,8 @@ class TranscribeResponse(BaseModel):
 class DestinationResponse(BaseModel):
     """Destination analysis response"""
     destination_address: str = Field(..., description="Destination address")
-    latitude: float = Field(..., description="Latitude coordinate")
-    longitude: float = Field(..., description="Longitude coordinate")
+    latitude: Optional[float] = Field(None, description="Latitude coordinate")
+    longitude: Optional[float] = Field(None, description="Longitude coordinate")
 
 
 class RouteStep(BaseModel):

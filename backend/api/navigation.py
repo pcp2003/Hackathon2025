@@ -39,17 +39,34 @@ async def transcribe(audio: UploadFile = File(...)):
 
 
 @router.post("/analyze", response_model=DestinationResponse)
-async def analyze_destination(text: str = Form(...)):
+async def analyze_destination(
+    text: str = Form(...),
+    user_lat: float = Form(None),
+    user_lon: float = Form(None),
+):
     """
-    Extract destination from natural language using NLP
+    Extract destination from natural language using NLP with optional user location context.
+    If user location is provided, GPT will prefer destinations within ~25-30km.
     
     - **text**: Natural language input describing destination
+    - **user_lat**: (Optional) User's current latitude
+    - **user_lon**: (Optional) User's current longitude
     - Returns: Destination name and coordinates
     """
     try:
         # Get transcription data from text
         transcription_data = {"text": text, "confidence": 1.0}
-        destination_data = text_to_places(transcription_data)
+        
+        # Build user coordinates if provided
+        user_coords = None
+        if user_lat is not None and user_lon is not None:
+            user_coords = {
+                "latitude": user_lat,
+                "longitude": user_lon
+            }
+        
+        # Extract destination address (with or without user location context)
+        destination_data = text_to_places(transcription_data, user_coords=user_coords)
         return DestinationResponse(**destination_data)
     except Exception as e:
         logger.error(f"Analysis error: {str(e)}")
