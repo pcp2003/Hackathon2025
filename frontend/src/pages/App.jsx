@@ -2,6 +2,7 @@ import React from 'react';
 import VoiceInput from '../components/VoiceInput';
 import Map from '../components/Map';
 import RouteDisplay from '../components/RouteDisplay';
+import EnableAudio from '../components/EnableAudio';
 import { useGeolocation, useNavigation } from '../hooks';
 
 export const App = () => {
@@ -15,6 +16,9 @@ export const App = () => {
       <header className="header">
         <h1>🧭 NaviAccess</h1>
         <p>Voice Navigation for Everyone</p>
+        <div style={{ display: 'inline-block' }}>
+          <EnableAudio />
+        </div>
       </header>
 
       <main className="main-content">

@@ -32,10 +32,11 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+    CMD wget --quiet --tries=1 --spider https://localhost/ || wget --quiet --tries=1 --spider http://localhost/ || exit 1
 
-# Expose port
+# Expose ports (HTTP and HTTPS)
 EXPOSE 80
+EXPOSE 443
 
 # Start Nginx
 CMD ["nginx", "-g", "daemon off;"]

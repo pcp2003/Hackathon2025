@@ -6,12 +6,17 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: naviacess-frontend
     ports:
+      # Serve HTTPS on host port 443 -> container 443. Also keep HTTP (80) if needed.
+      - "443:443"
       - "3000:80"
+    volumes:
+      # Mount host certificates into the container (create ./docker/certs with cert.pem + key.pem)
+      - ./docker/certs:/etc/nginx/certs:ro
     networks:
       - naviacess-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "https://localhost/" ]
       interval: 30s
       timeout: 10s
       retries: 3
