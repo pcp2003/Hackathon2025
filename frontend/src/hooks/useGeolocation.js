@@ -82,6 +82,7 @@ export const useGeolocation = (destination, onStepCompleted) => {
     // Watch location for changes
     const id = navigator.geolocation.watchPosition(
       (position) => {
+        console.log('Location update received:', position);
         const newLocation = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
