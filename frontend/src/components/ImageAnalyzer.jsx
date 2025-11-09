@@ -134,11 +134,20 @@ export const ImageAnalyzer = () => {
           });
 
           if (response.ok) {
-            const ttsResult = await response.json();
-            if (ttsResult.audio) {
-              // Build full audio URL
-              const audioUrl = `${API_CONFIG.BASE_URL}${ttsResult.audio}`;
+            // Check content type - could be audio (Blob) or JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType?.includes('audio/')) {
+              // Response is audio blob
+              const audioBlob = await response.blob();
+              const audioUrl = URL.createObjectURL(audioBlob);
               await playAudio(audioUrl);
+            } else if (contentType?.includes('application/json')) {
+              // Response is JSON with audio path
+              const ttsResult = await response.json();
+              if (ttsResult.audio) {
+                const audioUrl = `${API_CONFIG.BASE_URL}${ttsResult.audio}`;
+                await playAudio(audioUrl);
+              }
             }
           }
         } catch (ttsErr) {
@@ -187,11 +196,20 @@ export const ImageAnalyzer = () => {
           });
 
           if (response.ok) {
-            const ttsResult = await response.json();
-            if (ttsResult.audio) {
-              // Build full audio URL
-              const audioUrl = `${API_CONFIG.BASE_URL}${ttsResult.audio}`;
+            // Check content type - could be audio (Blob) or JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType?.includes('audio/')) {
+              // Response is audio blob
+              const audioBlob = await response.blob();
+              const audioUrl = URL.createObjectURL(audioBlob);
               await playAudio(audioUrl);
+            } else if (contentType?.includes('application/json')) {
+              // Response is JSON with audio path
+              const ttsResult = await response.json();
+              if (ttsResult.audio) {
+                const audioUrl = `${API_CONFIG.BASE_URL}${ttsResult.audio}`;
+                await playAudio(audioUrl);
+              }
             }
           }
         } catch (ttsErr) {

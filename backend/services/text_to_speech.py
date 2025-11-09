@@ -106,13 +106,16 @@ def text_to_speech(data: Union[str, dict], output_file: str = "navigation.wav") 
     return f"/audio/{output_file}"
 
 
-def text_to_speech_stream(text: str, output_file: str = "guidance.wav") -> str:
+def text_to_speech_stream(text: str, output_file: str = "guidance.wav", language: str = "en") -> str:
     """
     Converte texto simples para áudio WAV (para instruções individuais).
     
     Args:
         text: Texto a ser convertido em voz
         output_file: Nome do arquivo de saída
+        language: Código de idioma (default: 'en' para English)
+                 Note: Currently used for future language support,
+                 ElevenLabs uses the voice's default language
         
     Returns:
         Caminho do arquivo WAV gerado
@@ -132,9 +135,12 @@ def text_to_speech_stream(text: str, output_file: str = "guidance.wav") -> str:
     output_path = audio_dir / output_file
 
     client = ElevenLabs(api_key=api_key)
+    
+    # Rachel voice is an English-speaking voice by default
+    # The language parameter can be used for future voice selection logic
     response = client.text_to_speech.convert(
         text=text,
-        voice_id="21m00Tcm4TlvDq8ikWAM"  # Rachel
+        voice_id="21m00Tcm4TlvDq8ikWAM"  # Rachel (English voice)
     )
 
     with open(output_path, "wb") as f:

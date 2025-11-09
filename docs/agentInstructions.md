@@ -1,6 +1,5 @@
-🧭 NaviAcess - Voice Navigation for Visually Impaired Users
 Overview
-NaviAcess is an AI-powered voice assistant that helps visually impaired people navigate urban environments independently. Users speak their destination and receive real-time audio guidance—like "Waze for accessibility."
+AI-powered voice assistant that helps visually impaired people navigate urban environments independently. Users speak their destination and receive real-time audio guidance—like "Waze for accessibility.", also have use computer vision to help the user deceive their surroundings.
 Core Features
 
 Voice Input: Speak your destination naturally

@@ -19,6 +19,13 @@ export const useNavigation = (currentLocation) => {
    */
   const playAudioFile = useCallback((audioPath) => {
     return new Promise((resolve) => {
+      // Validate audioPath
+      if (!audioPath || typeof audioPath !== 'string') {
+        console.warn('Invalid audio path:', audioPath);
+        resolve();
+        return;
+      }
+
       // Converter para URL absoluta se necessário
       let audioUrl;
       if (audioPath.startsWith('http')) {
@@ -141,13 +148,18 @@ export const useNavigation = (currentLocation) => {
 
   /**
    * Gera e reproduz áudio para um passo específico
+   * Força idioma inglês sempre, mesmo se instrução contém nomes em português
    */
   const playStepGuidance = useCallback(async (stepIndex, instruction) => {
     try {
+      // Instruction format: "Turn right on Avenida Paulista"
+      // We need to ensure TTS always speaks in English, even if street names are Portuguese
+      // Send language: 'en' to backend to force English speech
       const response = await apiClient.generateStepGuidance(
         stepIndex,
         instruction,
-        stepIndex + 1 // User-facing step number
+        stepIndex + 1, // User-facing step number
+        'en' // Force English language for TTS
       );
       if (response instanceof Blob) {
         await playAudioBlob(response);
@@ -159,7 +171,7 @@ export const useNavigation = (currentLocation) => {
     } catch (err) {
       console.error('Error generating step guidance:', err);
     }
-  }, [playAudioFile]);
+  }, [playAudioBlob, playAudioFile]);
 
   /**
    * Gera e reproduz áudio de erro
@@ -167,11 +179,19 @@ export const useNavigation = (currentLocation) => {
   const playErrorGuidance = useCallback(async (errorMessage) => {
     try {
       const response = await apiClient.generateGuidance(errorMessage);
-      await playAudioFile(response.audio);
+      // Check if response has audio property before using it
+      if (response && response.audio) {
+        await playAudioFile(response.audio);
+      } else if (response instanceof Blob) {
+        // Response might be a Blob directly
+        await playAudioBlob(response);
+      } else {
+        console.warn('No audio in error response:', response);
+      }
     } catch (err) {
       console.error('Error generating error guidance:', err);
     }
-  }, [playAudioFile]);
+  }, [playAudioFile, playAudioBlob]);
 
   /**
    * Transcreve áudio, análisa destino, calcula rota e reproduz instruções
@@ -186,11 +206,34 @@ export const useNavigation = (currentLocation) => {
         const transcribeResult = await apiClient.transcribe(audioBlob);
         console.log('Transcribed:', transcribeResult.text);
 
+        // Check if transcription resulted in useful sound
+        if (!transcribeResult.text || transcribeResult.text.trim() === '' || transcribeResult.error_message) {
+          console.log('No useful sound recognized');
+          const userMessage = 'I did not hear anything useful. Please speak your destination again.';
+          await playErrorGuidance(userMessage);
+          setDestination(null);
+          setRoute(null);
+          setIsLoading(false);
+          return;
+        }
+
         // Análisa destino
         const destinationResult = await apiClient.analyzeDestination(
           transcribeResult.text
         );
         setDestination(destinationResult);
+
+        // Validate that destination coordinates are valid (not NaN)
+        if (!destinationResult.latitude || !destinationResult.longitude || 
+            isNaN(destinationResult.latitude) || isNaN(destinationResult.longitude)) {
+          console.log('Invalid destination coordinates:', destinationResult);
+          const userMessage = 'I did not understand that destination. Please speak a different location.';
+          await playErrorGuidance(userMessage);
+          setDestination(null);
+          setRoute(null);
+          setIsLoading(false);
+          return;
+        }
 
         // Calcula rota
         if (currentLocation) {
@@ -206,18 +249,26 @@ export const useNavigation = (currentLocation) => {
             // Route calculation failed - play error audio and reset state
             console.log('Route calculation failed:', routeResult.error_message);
             
-            // Generate user-friendly error messages
+            // Generate user-friendly error messages based on error type or message content
             let userMessage = '';
-            if (routeResult.error_message.includes('too far away')) {
+            const errorMsg = routeResult.error_message || '';
+            const errorType = routeResult.error_type || '';
+            
+            // Check error type first, then error message content
+            if (errorType === 'distance_exceeded' || errorMsg.includes('too far away') || errorMsg.includes('kilometers away')) {
               userMessage = 'I cannot calculate the route because the destination is too far away. Please try a closer destination.';
-            } else if (routeResult.error_message.includes('No useful sound')) {
-              userMessage = 'I did not hear anything useful. Please speak your destination again.';
+            } else if (errorType === 'no_route_found' || errorMsg.includes('no route')) {
+              userMessage = 'I could not find a route to that destination. Please try a different location.';
+            } else if (errorMsg.includes('temporarily unavailable') || errorMsg.includes('service') || errorMsg.includes('error')) {
+              userMessage = 'The navigation service is temporarily unavailable. Please try again in a moment.';
             } else {
-              userMessage = routeResult.error_message || 'I could not calculate the route. Please try again.';
+              userMessage = errorMsg || 'I could not calculate the route. Please try again.';
             }
             
-            // Play error message and wait for it to finish
-            await playErrorGuidance(userMessage);
+            // Play error message if audio is available
+            if (routeResult.audio) {
+              await playErrorGuidance(userMessage);
+            }
             
             // Then reset state so user can record again
             setDestination(null);
@@ -289,6 +340,8 @@ export const useNavigation = (currentLocation) => {
     handleTranscribe,
     moveToNextStep,
     playStepGuidance,
+    playErrorGuidance,
+    playAudioFile,
     stopAudio,
   };
 };

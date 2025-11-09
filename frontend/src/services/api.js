@@ -22,18 +22,32 @@ const apiClient = {
         mode: 'cors', // Explicitly enable CORS
       });
 
-      // Handle 422 Unprocessable Entity (no useful sound recognized) silently
-      if (response.status === 422) {
-        console.log(`Silent error for ${endpoint}: 422 - No useful sound recognized`);
-        return { success: false, error_message: 'No useful sound recognized' };
-      }
-
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
-      }
-
       // Check if response is JSON or Blob (for audio)
       const contentType = response.headers.get('content-type');
+      
+      if (!response.ok) {
+        // Try to parse error response as JSON first
+        if (contentType?.includes('application/json')) {
+          try {
+            const errorData = await response.json();
+            console.error(`API Error for ${endpoint}: ${response.status}`, errorData);
+            throw new Error(errorData.error_message || errorData.detail || response.statusText);
+          } catch (e) {
+            // Not JSON, handle as generic error
+            console.error(`API Error for ${endpoint}: ${response.status} ${response.statusText}`);
+            throw new Error(`API Error: ${response.statusText}`);
+          }
+        } else {
+          // Handle 422 Unprocessable Entity (no useful sound recognized) silently
+          if (response.status === 422) {
+            console.log(`Silent error for ${endpoint}: 422 - No useful sound recognized`);
+            return { success: false, error_message: 'No useful sound recognized' };
+          }
+          throw new Error(`API Error: ${response.statusText}`);
+        }
+      }
+
+      // Successful response - check content type
       if (contentType?.includes('application/json')) {
         return await response.json();
       }
@@ -61,10 +75,10 @@ const apiClient = {
 
   async getRoute(originLat, originLon, destLat, destLon) {
     const formData = new FormData();
-    formData.append('origin_lat', originLat);
-    formData.append('origin_lon', originLon);
-    formData.append('dest_lat', destLat);
-    formData.append('dest_lon', destLon);
+    formData.append('origin_lat', String(parseFloat(originLat)));
+    formData.append('origin_lon', String(parseFloat(originLon)));
+    formData.append('dest_lat', String(parseFloat(destLat)));
+    formData.append('dest_lon', String(parseFloat(destLon)));
 
     return this.request(API_CONFIG.ENDPOINTS.ROUTE, formData);
   },
@@ -80,27 +94,28 @@ const apiClient = {
     const formData = new FormData();
     formData.append('origin_name', originName);
     formData.append('destination_name', destName);
-    formData.append('total_distance', totalDistance);
-    formData.append('total_duration', totalDuration);
+    formData.append('total_distance', String(parseFloat(totalDistance)));
+    formData.append('total_duration', String(parseFloat(totalDuration)));
 
     return this.request(API_CONFIG.ENDPOINTS.SPEAK_INITIAL, formData);
   },
 
-  async generateStepGuidance(stepIndex, instruction, stepNumber) {
+  async generateStepGuidance(stepIndex, instruction, stepNumber, language = 'en') {
     const formData = new FormData();
-    formData.append('step_index', stepIndex);
+    formData.append('step_index', String(parseInt(stepIndex)));
     formData.append('instruction', instruction);
-    formData.append('step_number', stepNumber);
+    formData.append('step_number', String(parseInt(stepNumber)));
+    formData.append('language', language);  // Force language for TTS
 
     return this.request(API_CONFIG.ENDPOINTS.SPEAK_STEP, formData);
   },
 
   async updateLocation(lat, lon, destLat, destLon) {
     const formData = new FormData();
-    formData.append('latitude', lat);
-    formData.append('longitude', lon);
-    formData.append('destination_lat', destLat);
-    formData.append('destination_lon', destLon);
+    formData.append('latitude', String(parseFloat(lat)));
+    formData.append('longitude', String(parseFloat(lon)));
+    formData.append('destination_lat', String(parseFloat(destLat)));
+    formData.append('destination_lon', String(parseFloat(destLon)));
 
     return this.request(API_CONFIG.ENDPOINTS.UPDATE_LOCATION, formData);
   },
@@ -119,5 +134,5 @@ export const analyzeDestination = (text) => apiClient.analyzeDestination(text);
 export const getRoute = (originLat, originLon, destLat, destLon) => apiClient.getRoute(originLat, originLon, destLat, destLon);
 export const generateGuidance = (text) => apiClient.generateGuidance(text);
 export const generateInitialGuidance = (originName, destName, totalDistance, totalDuration) => apiClient.generateInitialGuidance(originName, destName, totalDistance, totalDuration);
-export const generateStepGuidance = (stepIndex, instruction, stepNumber) => apiClient.generateStepGuidance(stepIndex, instruction, stepNumber);
+export const generateStepGuidance = (stepIndex, instruction, stepNumber, language = 'en') => apiClient.generateStepGuidance(stepIndex, instruction, stepNumber, language);
 export const updateLocation = (lat, lon, destLat, destLon) => apiClient.updateLocation(lat, lon, destLat, destLon);

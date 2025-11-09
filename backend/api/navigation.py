@@ -2,7 +2,7 @@
 Navigation endpoints for voice-based routing
 """
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pathlib import Path
 import os
 import logging
@@ -157,13 +157,16 @@ async def get_route(
             # Generate error response with audio
             error_response = speak_error_response("distance_exceeded", error_details)
             
-            # Return error response as JSON instead of raising exception
-            return {
-                "success": False,
-                "error_type": "distance_exceeded",
-                "error_message": error_response["error_message"],
-                "audio": error_response["audio_path"]
-            }
+            # Return error response as JSON with 200 status (not an HTTP error)
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "success": False,
+                    "error_type": "distance_exceeded",
+                    "error_message": error_response["error_message"],
+                    "audio": error_response["audio_path"]
+                }
+            )
         
         # Store route state for later use in location updates
         current_route_state["steps"] = route_data["steps"]
@@ -172,13 +175,16 @@ async def get_route(
         current_route_state["current_step_index"] = 0
         
         steps = [RouteStep(**step) for step in route_data["steps"]]
-        return {
-            "success": True,
-            "steps": [step.model_dump() for step in steps],
-            "total_distance": route_data["total_distance"],
-            "total_duration": route_data["total_duration"],
-            "route_coordinates": route_data.get("route_coordinates", [])
-        }
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "steps": [step.model_dump() for step in steps],
+                "total_distance": route_data["total_distance"],
+                "total_duration": route_data["total_duration"],
+                "route_coordinates": route_data.get("route_coordinates", [])
+            }
+        )
     except Exception as e:
         # Handle other errors (routing service errors, etc)
         error_msg = str(e)
@@ -195,21 +201,27 @@ async def get_route(
         try:
             error_response = speak_error_response(error_type, error_msg)
             
-            return {
-                "success": False,
-                "error_type": error_type,
-                "error_message": error_response["error_message"],
-                "audio": error_response["audio_path"]
-            }
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "success": False,
+                    "error_type": error_type,
+                    "error_message": error_response["error_message"],
+                    "audio": error_response["audio_path"]
+                }
+            )
         except Exception as audio_error:
             logger.error(f"Failed to generate error audio: {str(audio_error)}")
             # Return error without audio if generation fails
-            return {
-                "success": False,
-                "error_type": error_type,
-                "error_message": f"Routing error: {error_msg}",
-                "audio": None
-            }
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "success": False,
+                    "error_type": error_type,
+                    "error_message": f"Routing error: {error_msg}",
+                    "audio": None
+                }
+            )
 
 
 @router.post("/speak", response_model=SpeakResponse)
@@ -285,6 +297,7 @@ async def speak_step_guidance(
     step_index: int = Form(...),
     instruction: str = Form(...),
     step_number: int = Form(...),
+    language: str = Form(default='en'),  # Language parameter (for future use)
 ):
     """
     Generate audio for a single navigation step.
@@ -293,6 +306,7 @@ async def speak_step_guidance(
     - **step_index**: Index of step in the route
     - **instruction**: The navigation instruction text
     - **step_number**: User-facing step number (for context)
+    - **language**: Language code for TTS (for future support)
     - Returns: Audio file URL with step instruction
     """
     try:
@@ -303,7 +317,8 @@ async def speak_step_guidance(
         output_filename = f"step_{step_index}.wav"
         audio_path = text_to_speech_stream(
             step_text,
-            output_file=output_filename
+            output_file=output_filename,
+            language=language  # Pass to TTS (currently just for future support)
         )
         if isinstance(audio_path, str) and audio_path.startswith('/audio/'):
             filename = audio_path.split('/audio/', 1)[1]
