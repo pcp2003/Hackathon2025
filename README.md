@@ -4,7 +4,7 @@
 
 ## 📋 Project Overview
 
-**NaviAcess** is a proof-of-concept built during Hackathon 2025 that demonstrates how modern AI APIs can be combined to create an accessible navigation experience.
+**NaviAcess** is a proof-of-concept built during Portugal biggest AI Hackathon that demonstrates how modern AI APIs can be combined to create an accessible navigation experience.
 
 ### What It Does
 Users **speak their destination naturally** (e.g., "Take me to Central Library"), and the system:
