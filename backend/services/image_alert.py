@@ -33,6 +33,13 @@ async def analyze_image(upload_file):
     """
     Envia uma imagem para o GPT-4o-mini (Vision) e retorna uma descrição curta e prática
     para contexto de rua — otimizado para velocidade.
+    
+    TODO: Phase 2 - Replace with continuous video stream analysis
+    Currently analyzes single image frames. Future version will:
+    - Process video stream (1 frame every 2-3 seconds)
+    - Real-time obstacle/danger detection
+    - Alert user without stopping navigation
+    - Integrate with mobile app vibration alerts
     """
     try:
         # ⚡ Lê e comprime a imagem

@@ -1,18 +1,15 @@
 """
 Navigation endpoints for voice-based routing
 """
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form
 from fastapi.responses import FileResponse, JSONResponse
 from pathlib import Path
 import os
 import logging
-import json
 
 from services.transcription import transcribe_audio
 from services.nlp import (
     text_to_places, 
-    speak_destination_summary, 
-    speak_user_comment_response,
     speak_error_response
 )
 from services.image_alert import analyze_image
@@ -303,6 +300,10 @@ async def speak_step_guidance(
     Generate audio for a single navigation step.
     Called when user reaches the point to execute this step.
     
+    TODO: Phase 2 - Implement multi-language support with different voices
+    Currently language parameter is accepted but not used (Rachel voice only).
+    When implemented, will support: en-Rachel, pt-Antonio, es-Diego, etc.
+    
     - **step_index**: Index of step in the route
     - **instruction**: The navigation instruction text
     - **step_number**: User-facing step number (for context)
@@ -341,6 +342,9 @@ async def update_location(
 ):
     """
     Update user location and recalculate if off-route
+    
+    TODO: Phase 2 - Implement route deviation detection and re-routing logic
+    Currently stores location for context but doesn't do live tracking.
 
     - **latitude**: Current latitude
     - **longitude**: Current longitude
@@ -354,68 +358,13 @@ async def update_location(
         current_user_location["longitude"] = longitude
         logger.info(f"Updated user location: ({latitude}, {longitude})")
 
-        result = await check_route_deviation(
-            current=(latitude, longitude),
-            destination=(destination_lat, destination_lon)
+        # TODO: Phase 2 - Implement route deviation detection
+        # For now, just confirm location was updated
+        return LocationUpdateResponse(
+            on_route=True,
+            needs_recalculation=False,
+            message="Location updated"
         )
-        return LocationUpdateResponse(**result)
     except Exception as e:
         logger.error(f"Location update error: {str(e)}")
         raise
-
-
-@router.post("/user-comment")
-async def process_user_comment(
-    text: str = Form(...),
-    destination_address: str = Form(None),
-    destination_distance: float = Form(None),
-    route_instruction: str = Form(None),
-):
-    """
-    Process user comments/feedback and generate intelligent voice responses.
-    
-    - **text**: User's spoken comment or feedback (from transcription)
-    - **destination_address**: Optional current destination
-    - **destination_distance**: Optional distance to destination in km
-    - **route_instruction**: Optional current navigation instruction
-    - Returns: Response text and audio path
-    """
-    try:
-        # Build context from optional parameters
-        context = {}
-        if destination_address:
-            context["current_destination"] = destination_address
-        if destination_distance is not None:
-            context["current_distance"] = destination_distance
-        if route_instruction:
-            context["current_route_step"] = route_instruction
-        
-        # Generate response and convert to speech
-        result = speak_user_comment_response(
-            text,
-            context=context if context else None
-        )
-        
-        return {
-            "response_text": result["response_text"],
-            "audio": result["audio_path"],
-            "format": "wav",
-            "message": result["message"]
-        }
-    except Exception as e:
-        logger.error(f"User comment processing error: {str(e)}")
-        raise
-
-
-async def check_route_deviation(current, destination):
-    """
-    Check if user is off-route and determine next step.
-    Returns next instruction audio if user has completed current step.
-    """
-    # TODO: Implement advanced route deviation detection with geofencing
-    # For now, basic implementation
-    return {
-        "on_route": True,
-        "needs_recalculation": False,
-        "message": "User is on route"
-    }
