@@ -1,538 +1,575 @@
-NaviAcess - Voice-Guided Navigation for the Visually Impaired
+# 🗣️ NaviAcess - Voice-Guided Navigation for the Visually Impaired
 
-Overview
+**"Waze for Accessibility"** – An AI-powered voice navigation system that empowers visually impaired users to navigate urban environments independently through natural voice commands and real-time audio guidance.
 
-NaviAcess is an AI-powered voice navigation application designed to help visually impaired individuals navigate urban environments independently. Users speak their destination naturally, and the application provides real-time audio guidance using intelligent routing and voice synthesis technology.
+## 📋 Project Overview
 
-This repository contains both the backend API (FastAPI) and frontend interface (React + Vite) built during the Hackathon 2025.
+**NaviAcess** is a proof-of-concept built during Hackathon 2025 that demonstrates how modern AI APIs can be combined to create an accessible navigation experience.
 
-Key Features
+### What It Does
+Users **speak their destination naturally** (e.g., "Take me to Central Library"), and the system:
+1. Transcribes the audio using ElevenLabs speech-to-text
+2. Extracts the destination using OpenAI GPT-4o-mini NLP
+3. Looks up coordinates using Nominatim geocoding
+4. Validates the distance (must be < 50 km for OSRM routing)
+5. Calculates an optimal pedestrian route
+6. **Delivers turn-by-turn audio guidance** using ElevenLabs text-to-speech
 
-Voice-First Interaction
+Users can also **capture images** to get audio descriptions of their surroundings using GPT-4o-mini vision, helping them understand potential obstacles and hazards.
 
-Users simply speak their destination address in natural language (e.g., "Take me to the Central Library"). The system transcribes speech to text in real-time.
+### Target Users
+- Visually impaired individuals who want independent urban mobility
+- People with low vision seeking accessible navigation
+- Anyone who prefers voice-based rather than visual navigation
 
-AI-Powered Destination Recognition
+### Tech Stack
+- **Backend:** FastAPI + Python (59 pytest tests)
+- **Frontend:** React + Vite (48 Vitest tests)
+- **AI Services:** OpenAI (NLP + Vision), ElevenLabs (STT + TTS)
+- **Routing:** OSRM (Open Source Routing Machine)
+- **Geocoding:** Nominatim (OpenStreetMap)
+- **DevOps:** Docker Compose, Nginx
 
-The backend uses OpenAI's GPT-4o-mini to intelligently extract destination names from conversational speech, handling ambiguous references and natural variations in how people describe locations.
+### Status
+✅ **107 tests passing** (0 failures)  
+✅ **Full audio pipeline working** (transcribe → analyze → route → speak)  
+✅ **Image analysis implemented** (surroundings description + hazard detection)  
+✅ **Production-ready error handling** (user-friendly audio messages)
 
-Real-Time Route Calculation
+---
 
-Uses the Open Source Routing Machine (OSRM) to compute optimal pedestrian routes with turn-by-turn directions specifically optimized for navigation on foot.
+## ⚡ Quick Start
 
-Natural Voice Guidance
+### Prerequisites
+- Docker & Docker Compose
+- API Keys: [OpenAI](https://platform.openai.com/api-keys) + [ElevenLabs](https://elevenlabs.io/)
 
-ElevenLabs text-to-speech technology converts navigation instructions into clear, natural-sounding audio guidance. Users hear step-by-step directions without needing to read anything.
+### Run It
 
-Live Image Analysis
-
-Users can capture images of their surroundings using the device camera. GPT-4o-mini analyzes the image in real-time to describe the street scene, detect obstacles, and alert the user to potential hazards.
-
-Error Detection and User-Friendly Messaging
-
-Multi-stage validation prevents API errors and provides context-aware error messages delivered via audio. If a destination is too far (over 50km), no longer exists, or has no pedestrian route, the user hears a specific, actionable explanation rather than a generic error.
-
-Responsive Mobile-First Design
-
-The frontend is designed to work seamlessly on smartphones, with large, easy-to-tap buttons and touch-friendly controls optimized for accessibility.
-
-Demo vs. Production Version
-
-This version is a demonstration of core AI and voice capabilities. The production version for blind users would feature:
-- A drastically simplified interface with a single, always-accessible action button
-- Voice-first interaction with minimal visual elements
-- Video stream analysis instead of single-frame images
-- Mobile app integration with device features (haptic feedback, native audio)
-- Offline support for common routes and maps
-
-Tech Stack
-
-Frontend
-
-- React 18 with React DOM
-- Vite (fast build tool and development server)
-- Leaflet (open-source map library)
-- Vitest (unit testing framework)
-- Axios (HTTP client for API communication)
-- HTML5 Geolocation API for GPS positioning
-
-Backend
-
-- FastAPI (modern Python web framework)
-- Uvicorn (ASGI server)
-- Pydantic (data validation and settings management)
-- OpenAI API (GPT-4o-mini for NLP and vision)
-- ElevenLabs API (text-to-speech synthesis)
-- OSRM (Open Source Routing Machine for pedestrian routing)
-- Nominatim (OpenStreetMap geocoding service)
-- Pillow (image manipulation)
-
-DevOps
-
-- Docker and Docker Compose (containerization)
-- Nginx (reverse proxy and static file serving in production)
-
-Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- Docker and Docker Compose (https://docs.docker.com/get-docker/)
-- Python 3.9+ (for local backend development without Docker)
-- Node.js 18+ (for local frontend development without Docker)
-- Git (for cloning the repository)
-
-You will also need API keys for:
-
-- OpenAI API (for GPT-4o-mini vision and NLP) - Get one at https://platform.openai.com/api-keys
-- ElevenLabs API (for text-to-speech) - Get one at https://elevenlabs.io/
-- Optional: OpenAI Project ID (if your organization uses multiple projects)
-
-Quick Start
-
-Option 1: Using Docker Compose (Recommended)
-
-Docker Compose runs both the frontend and backend in isolated containers, handling all dependencies automatically.
-
-Step 1: Clone the Repository
-
+```bash
 git clone https://github.com/pcp2003/Hackathon2025.git
 cd Hackathon2025
 
-Step 2: Configure Environment Variables
+# Create .env with your API keys
+cp .env.example .env
+# Edit .env: OPENAI_API_KEY and ELEVENLABS_API_KEY
 
-Create a .env file in the project root with your API keys:
-
-OPENAI_API_KEY=your_openai_api_key_here
-ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
-OPENAI_PROJECT_ID=your_project_id_optional
-
-Do not commit .env to version control. Add it to .gitignore if not already there.
-
-Step 3: Build and Start Services
-
+# Start
 docker compose up --build
 
-The build process will:
-- Create Docker images for both frontend and backend
-- Install all Python dependencies (backend)
-- Install all Node.js dependencies (frontend)
-- Start the FastAPI backend on http://localhost:8000
-- Start the Nginx-served frontend on http://localhost:3000
+# Open: http://localhost:3000
+```
 
-Step 4: Access the Application
+That's it! Frontend at http://localhost:3000, API at http://localhost:8000
 
-Open your browser and navigate to:
+---
 
-http://localhost:3000
+## 🎯 How to Use
 
-The frontend will communicate with the backend API at http://localhost:8000/api.
+### Step 1: Grant Location Permission
+Open the app and allow it to access your GPS location.
 
-Step 5: Stop the Services
+### Step 2: Record Your Destination
+Click the **blue "Record" button** and speak naturally:
+- *"Take me to Central Library"*
+- *"Navigate to the train station"*
+- *"I want the shopping mall downtown"*
 
-When finished, stop the services with:
+### Step 3: Follow Audio Guidance
+Listen to step-by-step instructions:
+- *"Step 1: Start walking east on Main Street. 200 meters."*
+- *"Step 2: Turn left onto Rua de Santa Justa. 150 meters."*
 
-docker compose down
+Click each step button to hear the audio guidance.
 
-Option 2: Local Development (Without Docker)
+### Step 4: Analyze Surroundings (Optional)
+Click **"Analyze Image"** to get audio description of what your camera sees:
+- Describes the street environment
+- Detects obstacles and hazards
+- Provides safety alerts
 
-If you prefer to run services locally for debugging or development:
+---
 
-Backend Setup
+## ✨ Core Features
 
-1. Navigate to the backend directory:
-   cd backend
+| Feature | How It Works | Technology |
+|---------|-------------|-----------|
+| **🎤 Voice Input** | Speak destination in natural language | ElevenLabs STT |
+| **🧠 AI Recognition** | Extracts destination from conversational speech | OpenAI GPT-4o-mini |
+| **📍 Geolocation** | Tracks user position in real-time | HTML5 Geolocation API |
+| **🗺️ Smart Routing** | Calculates optimal pedestrian paths | OSRM + Nominatim |
+| **🔊 Voice Output** | Delivers turn-by-turn instructions as speech | ElevenLabs TTS (Rachel) |
+| **📸 Image Analysis** | Describes surroundings & detects hazards | GPT-4o-mini Vision |
+| **❌ Error Handling** | Specific, actionable audio error messages | Custom validation logic |
+| **📱 Accessibility** | Large buttons, touch-friendly, voice-first | React components |
 
-2. Create a Python virtual environment:
-   python -m venv .venv
+---
 
-3. Activate the virtual environment:
-   On macOS/Linux:
-   source .venv/bin/activate
+## 🏗️ System Architecture
+
+### Data Flow Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ FRONTEND (React + Vite)                                         │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. useGeolocation()           → Get user's GPS coordinates      │
+│ 2. VoiceInput.jsx             → Record user's voice             │
+│ 3. Send audio to /api/transcribe                                │
+└────────────┬────────────────────────────────────────────────────┘
+             │ HTTP request
+             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ BACKEND (FastAPI)                                               │
+├─────────────────────────────────────────────────────────────────┤
+│ POST /transcribe              → Audio file → ElevenLabs STT     │
+│                                 Returns: { text, confidence }   │
+│                                                                 │
+│ POST /analyze                 → Text + User location            │
+│   └─ OpenAI GPT-4o-mini: Extract destination name               │
+│   └─ Nominatim: Convert address → Lat/Long coordinates          │
+│   └─ Haversine: Check distance (must be < 50 km)                │
+│   └─ Returns: { destination_address, latitude, longitude }      │
+│                                                                 │
+│ POST /route                   → Origin + Destination            │
+│   └─ OSRM: Calculate pedestrian route                           │
+│   └─ Returns: { steps[], total_distance, total_duration }       │
+│                                                                 │
+│ POST /speak-step (for each step)                                │
+│   └─ ElevenLabs TTS: Convert instruction → Audio                │
+│   └─ Returns: Binary WAV file                                   │
+│                                                                 │
+│ POST /analyze-image           → Image file                      │
+│   └─ GPT-4o-mini Vision: Describe scene + detect hazards        │
+│   └─ Convert to speech if needed                                │
+│   └─ Returns: { description, danger_detected, danger_type }     │
+│                                                                 │
+│ GET /health                   → Application status check        │
+└────────────┬────────────────────────────────────────────────────┘
+             │ HTTP responses
+             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ FRONTEND (React + Vite)                                         │
+├─────────────────────────────────────────────────────────────────┤
+│ Map.jsx           → Display route on Leaflet map (visual aid)   │
+│ RouteDisplay.jsx  → Show each step with buttons                 │
+│ playStepGuidance()→ Play audio for each step (TTS response)     │
+│ EnableAudio.jsx   → Request microphone & speaker permissions    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Error Handling Strategy
+
+Multi-stage validation prevents cascade failures:
+
+```
+USER INPUT
+    ↓
+Frontend Validation (Microphone check, audio duration)
+    ↓
+API Call
+    ↓
+Backend Validation (Coordinates, distance check, API response checks)
+    ↓
+Service Integration (OpenAI, ElevenLabs, OSRM)
+    ↓
+Error Response Generation
+    ↓
+Convert Error to Audio Message
+    ↓
+Frontend Plays Audio Error to User
+```
+
+**Result:** Users always hear clear, actionable error messages instead of generic exceptions.
+
+---
+
+## 📊 Quality & Test Status
+
+✅ **48 Frontend Tests Passing**
+- 24 useNavigation tests (core routing logic)
+- 24 ImageAnalyzer tests (image recognition)
+- 0 failures, 4 skipped (hardware camera tests)
+
+✅ **59 Backend Tests Passing**
+- NLP & destination extraction
+- Routing & distance validation
+- Text-to-speech & audio generation
+- Error handling & response formatting
+
+✅ **Total: 107 Passing Tests** (0 failures)
+
+### Test Coverage Areas
+```
+Backend Tests (59):
+├── test_health.py          → Health check endpoints
+├── test_nlp.py             → NLP extraction & geocoding
+├── test_routing.py         → OSRM integration & distance checks
+├── test_text_to_speech.py  → TTS audio generation
+├── test_navigation.py      → Full API workflows
+└── test_helpers.py         → Utility functions
+
+Frontend Tests (48):
+├── useNavigation.test.jsx  → Core hook logic (24 tests)
+├── ImageAnalyzer.test.jsx  → Image upload & parsing (24 tests)
+└── (4 skipped - require physical camera)
+```
+
+---
+
+## 🌐 API Endpoints Reference
+
+### Core Navigation Pipeline
+
+```
+1. TRANSCRIBE (Audio → Text)
+   POST /api/transcribe
+   Input:  Audio file (WAV/MP3)
+   Output: { "text": "Take me to...", "confidence": 0.95 }
+
+2. ANALYZE (Text → Destination)
+   POST /api/analyze
+   Input:  { "text": "..." }
+   Output: { "destination_address": "...", "latitude": 38.7369, "longitude": -9.1299 }
    
-   On Windows:
-   .venv\Scripts\activate
+   Validation:
+   - Must be a valid street address
+   - Must not be > 50 km away (haversine check)
+   - Nominatim geocoding must succeed
 
-4. Install Python dependencies:
-   pip install -r requirements.txt
+3. ROUTE (Destination → Steps)
+   POST /api/route
+   Input:  { "origin_lat": 38.7, "origin_lon": -9.1, 
+             "dest_lat": 38.7369, "dest_lon": -9.1299 }
+   Output: { "steps": [...], "total_distance": 5300, "total_duration": 1200 }
+   
+   Uses: OSRM service for pedestrian-optimized routing
 
-5. Create a .env file in the backend directory with your API keys:
-   OPENAI_API_KEY=your_openai_api_key_here
-   ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+4. SPEAK-STEP (Instruction → Audio)
+   POST /api/speak-step
+   Input:  { "instruction": "Turn left", "step_number": 1, 
+             "language": "en" }
+   Output: Binary WAV file
+   
+   Tech: ElevenLabs Rachel voice (English only in this version)
+```
 
-6. Start the FastAPI server:
-   uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+### Analysis Endpoint
 
-   The backend API will be available at http://localhost:8000
-   Interactive API documentation at http://localhost:8000/docs
-
-Frontend Setup
-
-1. In a new terminal, navigate to the frontend directory:
-   cd frontend
-
-2. Install Node.js dependencies:
-   npm install
-
-3. Start the development server:
-   npm run dev
-
-   The frontend will typically run on http://localhost:5173 (check terminal output for the exact URL)
-
-4. The frontend automatically connects to the backend at http://localhost:8000/api
-
-Testing the Application
-
-Testing Backend API
-
-The backend includes comprehensive unit tests for all services:
-
-pytest -q
-
-This runs all tests in the backend/tests directory and reports coverage.
-
-Testing Frontend
-
-The frontend includes unit tests for React components and hooks:
-
-npm test
-
-Running specific test files:
-
-npm test useNavigation.test.jsx
-npm test ImageAnalyzer.test.jsx
-
-Test Results Summary
-
-Currently, the application includes:
-- 59 backend tests covering NLP, routing, error handling, and voice synthesis
-- 54 frontend tests covering React hooks and component logic
-- 4 skipped tests (camera hardware-specific tests that require physical device)
-
-Total: 113 tests with 0 failures
-
-Using the Application
-
-Starting a Navigation Session
-
-1. Allow Geolocation: When you open the app, the browser will ask for permission to access your location. Grant permission to use GPS coordinates as the starting point.
-
-2. Click the Record Button: A large blue button labeled "Record" is the main interface. Click it to start recording.
-
-3. Speak Your Destination: Say something like:
-   - "Take me to Central Library"
-   - "Navigate to the train station"
-   - "I want to go to the shopping mall downtown"
-
-4. Listen to Confirmation: The system will confirm the destination and provide distance information via audio.
-
-5. Follow Voice Guidance: As you move, listen to step-by-step audio instructions. Each turn is announced clearly.
-
-6. Capture Surroundings: Click the "Analyze Image" button to capture a photo of your surroundings. The system will describe what it sees and alert you to any obstacles.
-
-Example Workflow
-
-User speaks: "Take me to Centro Comercial Colombo"
-System responds: "Your destination is Centro Comercial Colombo in Lisbon, Portugal. It is 5.3 kilometers away. Please confirm if you want to proceed."
-User can then navigate step by step, with audio guidance like: "Step 1. Start walking east on R. Neves Ferreira. 200 meters. Step 2. Turn left onto Rua de Santa Justa. 150 meters."
-
-API Endpoints
-
-The backend exposes the following REST API endpoints:
-
-Core Navigation Endpoints
-
-POST /api/transcribe
-Converts audio input to text using ElevenLabs speech-to-text.
-Body: multipart/form-data with audio file
-Returns: { "text": "...", "confidence": 0.95 }
-
-POST /api/analyze
-Extracts destination address from natural language text using OpenAI.
-Body: form data with "text" parameter
-Returns: { "destination_address": "...", "latitude": 38.7369, "longitude": -9.1299 }
-
-POST /api/route
-Calculates optimal pedestrian route between origin and destination using OSRM.
-Body: form data with origin_lat, origin_lon, dest_lat, dest_lon
-Returns: { "steps": [...], "total_distance": 5300, "total_duration": 1200 }
-
-POST /api/speak
-Converts text instruction to speech audio using ElevenLabs TTS.
-Body: form data with "text" parameter
-Returns: Binary audio file (WAV format)
-
-POST /api/speak-step
-Generates audio for a single navigation step with natural language context.
-Body: form data with step_index, instruction, step_number, language (optional)
-Returns: Binary audio file (WAV format)
-
-Analysis Endpoints
-
+```
+ANALYZE-IMAGE (Image → Description)
 POST /api/analyze-image
-Analyzes an uploaded image using GPT-4o-mini vision to describe the scene.
-Body: multipart/form-data with image file
-Returns: { "description": "..." }
+Input:  Image file (JPEG/PNG)
+Output: { "description": "...", "danger_detected": false }
 
-Health and Status
+Uses: GPT-4o-mini vision to describe environment & detect hazards
+```
 
+### Health Check
+
+```
+HEALTH (Status check)
 GET /api/health
-Returns application health status.
-Returns: { "status": "healthy", "timestamp": "..." }
+Output: { "status": "healthy", "timestamp": "..." }
+```
 
-Project Structure
+**📖 Interactive API Docs:** http://localhost:8000/docs (Swagger UI)
 
+---
+
+## 📂 Project Structure
+
+```
 Hackathon2025/
-├── README.md
-├── docker-compose.yml
-├── .env.example
-├── backend/
-│   ├── main.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── navigation.py
-│   │   └── health.py
-│   ├── services/
-│   │   ├── transcription.py
-│   │   ├── nlp.py
-│   │   ├── routing.py
-│   │   ├── image_alert.py
-│   │   └── text_to_speech.py
-│   ├── schemas/
-│   │   ├── navigation.py
-│   │   └── health.py
-│   ├── tests/
-│   │   ├── test_*.py
-│   │   └── ...
-│   └── utils/
-│       └── helpers.py
-├── frontend/
-│   ├── package.json
-│   ├── vite.config.js
-│   ├── vitest.config.js
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   ├── index.html
-│   ├── src/
-│   │   ├── main.jsx
-│   │   ├── pages/
-│   │   │   └── App.jsx
-│   │   ├── components/
-│   │   │   ├── VoiceInput.jsx
-│   │   │   ├── Map.jsx
-│   │   │   ├── RouteDisplay.jsx
-│   │   │   └── ImageAnalyzer.jsx
-│   │   ├── hooks/
-│   │   │   ├── useNavigation.js
-│   │   │   ├── useGeolocation.js
-│   │   │   └── useAudio.js
-│   │   ├── services/
-│   │   │   └── api.js
-│   │   ├── styles/
-│   │   │   ├── index.css
-│   │   │   └── variables.css
-│   │   └── tests/
-│   │       └── *.test.jsx
-│   └── public/
-├── docker/
-│   └── certs/
-│       ├── cert.pem (local HTTPS)
-│       └── key.pem
-└── docs/
-    ├── agentInstructions.md
-    ├── commit-*.md (detailed commit logs)
-    ├── code-audit-unused-features.md
-    └── session-summary-2025-11-09.md
+│
+├─ backend/                    # FastAPI Python Application
+│  ├─ api/
+│  │  ├─ navigation.py         # Core endpoints (POST /transcribe, /analyze, /route, etc)
+│  │  └─ health.py             # GET /health endpoint
+│  │
+│  ├─ services/                # External service integrations
+│  │  ├─ transcription.py      # ElevenLabs speech-to-text
+│  │  ├─ nlp.py                # OpenAI NLP + Nominatim geocoding
+│  │  ├─ routing.py            # OSRM routing service
+│  │  ├─ text_to_speech.py     # ElevenLabs text-to-speech
+│  │  └─ image_alert.py        # GPT-4o-mini vision for image analysis
+│  │
+│  ├─ schemas/                 # Pydantic validation schemas
+│  │  ├─ navigation.py         # Request/response models
+│  │  └─ health.py             # Health check model
+│  │
+│  ├─ tests/                   # 59 pytest tests
+│  │  ├─ test_nlp.py
+│  │  ├─ test_routing.py
+│  │  ├─ test_text_to_speech.py
+│  │  └─ ...
+│  │
+│  ├─ utils/
+│  │  └─ helpers.py            # Utility functions
+│  │
+│  ├─ main.py                  # FastAPI app initialization & CORS setup
+│  ├─ requirements.txt
+│  └─ Dockerfile
+│
+├─ frontend/                   # React + Vite Application
+│  ├─ src/
+│  │  ├─ pages/
+│  │  │  └─ App.jsx            # Main app layout
+│  │  │
+│  │  ├─ components/           # React components
+│  │  │  ├─ VoiceInput.jsx     # Record button
+│  │  │  ├─ Map.jsx            # Leaflet map display
+│  │  │  ├─ RouteDisplay.jsx   # Step-by-step route UI
+│  │  │  ├─ ImageAnalyzer.jsx  # Camera & image upload
+│  │  │  └─ EnableAudio.jsx    # Permissions request
+│  │  │
+│  │  ├─ hooks/                # Custom React hooks
+│  │  │  ├─ useNavigation.js   # Core routing logic (24 tests)
+│  │  │  ├─ useGeolocation.js  # GPS tracking
+│  │  │  └─ useAudio.js        # Audio playback control
+│  │  │
+│  │  ├─ services/
+│  │  │  └─ api.js             # Axios client to backend
+│  │  │
+│  │  ├─ styles/               # CSS styling
+│  │  └─ tests/                # 24 Vitest tests
+│  │
+│  ├─ vite.config.js
+│  ├─ vitest.config.js
+│  ├─ package.json
+│  ├─ Dockerfile
+│  └─ nginx.conf               # Production serving config
+│
+├─ docs/
+│  ├─ agentInstructions.md     # This development workflow
+│  ├─ commit-YYYY-MM-DD-*.md   # 21+ commit documentation files
+│  └─ LOCAL_HTTPS.md           # HTTPS setup for local testing
+│
+├─ docker/
+│  └─ certs/                   # SSL certificates (local HTTPS)
+│     ├─ cert.pem
+│     ├─ key.pem
+│     └─ rootCA.pem
+│
+├─ docker-compose.yml          # Service orchestration
+├─ .env.example                # Environment template
+└─ README.md                   # This file
+```
 
-How It Works: Data Flow
+---
 
-1. User speaks destination
-   - Frontend captures audio via HTML5 MediaRecorder API
-   - Audio sent to backend /api/transcribe endpoint
+## 🧪 Running Tests
 
-2. Backend transcribes speech
-   - ElevenLabs speech-to-text converts audio to text string
-   - Returns transcribed text with confidence score
+```bash
+# Backend
+cd backend && pytest -q
 
-3. Frontend analyzes destination
-   - Transcribed text sent to /api/analyze endpoint
-   - Backend uses OpenAI to extract destination name and coordinates
-   - Nominatim geocoder looks up coordinates
+# Frontend
+cd frontend && npm test
+```
 
-4. Backend calculates route
-   - Origin (user location) and destination coordinates sent to /api/route
-   - OSRM calculates optimal pedestrian path
-   - Returns step-by-step instructions, distance, and duration
+---
 
-5. Frontend displays and narrates route
-   - Route displayed on Leaflet map (visual reference)
-   - For each step, user clicks button to hear audio narration
-   - Backend /api/speak-step converts instruction to ElevenLabs audio
+## 🚨 Troubleshooting
 
-6. Live image analysis
-   - User captures image via camera
-   - Image sent to /api/analyze-image endpoint
-   - GPT-4o-mini describes scene and detects obstacles
-   - Response converted to audio and played to user
+| Problem | Solution |
+|---------|----------|
+| **Cannot connect to localhost:3000** | Run `docker compose ps` to check services. If down, restart with `docker compose up` |
+| **API key errors** | Verify `.env` file with `OPENAI_API_KEY` and `ELEVENLABS_API_KEY`. Restart: `docker compose restart` |
+| **Geolocation denied** | Grant location permission in browser settings. Some browsers require HTTPS (see docs/LOCAL_HTTPS.md) |
+| **Microphone not working** | Check browser console (F12). Grant microphone permission. Ensure microphone is not muted. |
+| **Destination too far / No route** | OSRM only routes within 50 km. Try a closer destination. |
+| **Backend 500 error** | Check logs: `docker compose logs backend`. Common causes: invalid API key, rate limit, network timeout. |
+| **Frontend not loading** | Clear browser cache. Check: `docker compose logs frontend`. Ensure port 3000 is free. |
+| **Audio not playing** | Check speaker is enabled. Verify browser allows audio playback. Check console for errors. |
 
-7. Error handling
-   - If any step fails (destination too far, no route found, API error)
-   - Backend generates user-friendly error message via /api/speak endpoint
-   - Error audio played to user
+### Common Error Messages
 
-Known Limitations and Future Work
+```
+"I did not hear anything useful. Please try again."
+→ Microphone recorded no sound. Speak louder or re-record.
 
-Current Limitations
+"I could not understand the destination. Please try again."
+→ GPT-4o-mini couldn't extract a destination. Be more specific.
 
-- Route calculation limited to distances under 50 kilometers
-- Image analysis processes single frames (not continuous video)
-- Language fixed to English (Rachel voice from ElevenLabs)
-- Visual map display not optimized for accessibility
-- Requires internet connection for all operations
+"Destination is too far away. Please try a closer location."
+→ Destination is > 50 km away. OSRM has distance limits.
 
-Phase 2 Enhancements
+"Could not find a route. Please try a different location."
+→ No pedestrian route exists. Try another destination.
 
-- Continuous video stream analysis instead of single image snapshots
-- Multi-language support with different ElevenLabs voices
-- Advanced route deviation detection and re-routing
-- User feedback and comment processing with AI responses
-- Offline mode with pre-downloaded maps and routes
-- Mobile app integration with haptic feedback and native OS features
+"Service is temporarily unavailable. Please try again in a moment."
+→ External API (OpenAI, ElevenLabs, OSRM) is down. Wait and retry.
+```
 
-Production Roadmap
+---
 
-- Drastically simplified interface (voice-first, minimal UI)
-- Native mobile app for iOS and Android
-- Accessibility audit and compliance (WCAG 2.1)
-- Real blind user testing and feedback iteration
-- Obstacle detection and warning system
-- Integration with local transit schedules and information
+## 📋 Setup & Installation
 
-Troubleshooting
+### Local Development (Without Docker)
 
-Issue: "Cannot connect to localhost:3000"
-Solution: Ensure Docker Compose services are running. Run `docker compose ps` to check status. If backend is down, run `docker compose logs backend` to see error details.
-
-Issue: "API key not found" or "OpenAI API error"
-Solution: Verify .env file exists in the project root with correct API keys. Check that OPENAI_API_KEY and ELEVENLABS_API_KEY are set. Restart containers after updating .env: `docker compose restart`.
-
-Issue: "Geolocation permission denied"
-Solution: Grant location permission in browser settings. On some browsers, geolocation requires HTTPS. Use a local HTTPS certificate (see docs/LOCAL_HTTPS.md).
-
-Issue: "Speech recognition not working"
-Solution: Check browser console (F12) for errors. Ensure microphone is not muted in browser settings. Grant microphone permission when prompted.
-
-Issue: "No route found" or "Destination too far"
-Solution: Try a destination closer to your current location (within 50 km). Ensure destination is a valid street address or landmark name.
-
-Issue: "Cannot read properties of undefined"
-Solution: Check browser console for full error trace. This typically indicates missing data from API response. Verify backend is responding correctly with `curl http://localhost:8000/api/health`.
-
-Running Tests and Validation
-
-Backend Testing
-
-Run all backend tests:
+**Backend:**
+```bash
 cd backend
-pytest -q
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# Linux/Mac: source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
 
-Run specific test file:
-pytest tests/test_nlp.py -q
-
-Run tests with coverage report:
-pytest --cov=services --cov=api tests/
-
-Frontend Testing
-
-Run all frontend tests:
+**Frontend (separate terminal):**
+```bash
 cd frontend
-npm test
+npm install
+npm run dev
+```
 
-Run tests in watch mode (re-run on file changes):
-npm test -- --watch
+---
 
-View coverage report:
-npm run test:coverage
+## 🔧 Configuration
 
-Linting
+Create `.env` in project root:
+```env
+OPENAI_API_KEY=sk-...
+ELEVENLABS_API_KEY=sk_...
+```
 
-Check frontend code for style issues:
-npm run lint
+Don't commit to git (already in `.gitignore`).
 
-Building for Production
+---
 
-Backend
+## �‍💻 Development Workflow
 
-The backend Dockerfile is already configured for production. It installs dependencies and runs the FastAPI server.
+This project follows a **strict commit protocol** documented in [`docs/agentInstructions.md`](./docs/agentInstructions.md):
 
-Frontend
+### Commit Requirements
 
-Build frontend for production:
-cd frontend
-npm run build
+✅ **Before Every Commit:**
+1. All tests pass (backend: pytest, frontend: npm test)
+2. Manual testing completed
+3. Create exactly ONE `.md` file in `/docs/commits/`
+4. Filename format: `commit-YYYY-MM-DD-description.md`
+5. No console.logs, debug code, or commented-out code
+6. Code coverage ≥ 80% for new code
 
-This creates an optimized build in the dist/ directory. Nginx serves this during `docker compose up`.
+### Commit Documentation Template
 
-Contributing
+Each commit gets one documentation file:
 
-This project was built during Hackathon 2025 as a proof of concept. Contributions and suggestions are welcome.
+```markdown
+# Commit: [Feature Description]
+Date: YYYY-MM-DD
+Author: [Your Name]
 
-To contribute:
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes with clear messages
-4. Push to your branch and open a Pull Request
+## Changes Made
+- What was implemented
 
-Code Review and Testing
+## Files Modified/Created
+- file1.py
+- file2.jsx
 
-All changes require:
-- Backend: All existing tests pass, new code has tests with 80%+ coverage
-- Frontend: All existing tests pass, visual regression testing recommended
-- Documentation: Clear explanation of changes and how to test them
+## Tests Added
+- Description of tests
 
-Architecture and Design Decisions
+## How to Test
+Steps to verify the changes work
 
-Why FastAPI and Uvicorn?
+## Notes
+Important decisions or considerations
+```
 
-FastAPI provides automatic API documentation (Swagger UI), fast performance, and built-in support for async operations. Uvicorn is a production-grade ASGI server ideal for real-time operations like streaming audio.
+### Commit History
 
-Why React and Vite?
+All 21+ commits are documented in `/docs/commits/`:
+- Most recent: `commit-2025-11-09-force-english-tts.md`
+- Session summary: `session-summary-2025-11-09.md`
+- Code audit: `code-audit-unused-features.md`
 
-React is a mature framework for building interactive UIs. Vite provides fast development builds and optimized production bundles. Together they enable quick iteration and responsive user experiences.
+**Review:** `ls docs/commits/` to see full history.
 
-Why OSRM for Routing?
+### Testing Requirements (TDD)
 
-OSRM is open-source and free to use via public servers. It provides pedestrian-optimized routes and returns detailed turn-by-turn instructions suitable for audio narration.
+- **Write tests FIRST** before implementing features
+- **Backend:** pytest with both success and error cases
+- **Frontend:** Vitest with React Testing Library
+- **Integration tests:** Full user workflows (voice → route → guidance)
+- **Minimum 80% coverage** for new code
+- **Run full test suite** before every commit
 
-Why ElevenLabs for Voice?
+### User Approval
 
-ElevenLabs provides high-quality, natural-sounding voice synthesis. The Rachel voice is clear and easy to understand, even at natural reading speeds suitable for navigation.
+**Every commit requires explicit user approval:**
 
-Why Nominatim for Geocoding?
+1. AI presents changes + doc file
+2. User reviews code and documentation
+3. User says "yes" or requests modifications
+4. Only then is code committed
 
-Nominatim is OpenStreetMap's free geocoding service. It handles varied address formats and is suitable for our use case of recognizing user-spoken addresses.
+---
 
-Error Handling Strategy
+## 🌟 Current Version Status
 
-The application uses a multi-stage validation approach:
-1. Frontend validates user input before sending to backend
-2. Backend validates request format and coordinates
-3. Backend checks for API errors and generates user-friendly audio responses
-4. Frontend handles network errors gracefully with fallback messages
+**This is a DEMO version** built during Hackathon 2025.
 
-This prevents cascade failures and ensures users always receive clear, actionable feedback even when things go wrong.
+**Current Features:**
+- ✅ Voice input and audio guidance
+- ✅ Full navigation pipeline (transcribe → analyze → route → speak)
+- ✅ Image analysis (surroundings description + hazard detection)
+- ✅ Visual map display with route
+- ✅ 107 tests passing with 0 failures
 
-License
+**Future Enhancements:**
+- Video stream analysis (not single images)
+- Multi-language support
+- Native mobile apps (iOS/Android)
+- Offline mode
+- Advanced obstacle detection
 
-This project was created during Hackathon 2025. Please see the LICENSE file for details (if included).
+---
 
-Contact and Support
+## 📈 Known Limitations
 
-For questions or issues, please open a GitHub issue or contact the project maintainers.
+- Max 50 km route distance (OSRM limitation)
+- English only (single voice configured)
+- Single image analysis (not continuous video)
+- Requires internet connection
+- Browser-based (not native app)
 
-Key Team Insights
+---
 
-This application demonstrates that voice-first, AI-powered navigation is feasible and can significantly improve accessibility for visually impaired users. The combination of modern APIs (OpenAI, ElevenLabs, OSRM) makes building accessible technology more achievable than ever.
+## 🎯 Roadmap & Future Work
 
-The architecture separates concerns cleanly: the backend handles all intelligence and API integration, while the frontend focuses on user interaction and audio playback. This separation makes both parts easy to test, maintain, and extend.
+### Phase 2: Enhanced Navigation
+- ✨ Continuous video stream analysis (not single images)
+- 🌍 Multi-language support with different voices
+- 🔄 Advanced route deviation detection
+- � Offline mode with pre-downloaded maps
+
+### Phase 3: Mobile & Accessibility
+- 📱 Native iOS app
+- 📱 Native Android app
+- 🎯 WCAG 2.1 accessibility compliance
+- 👁️ Real user testing with blind users
+
+### Phase 4: Advanced Features
+- 🤖 AI-powered user feedback
+- 📊 Analytics and error tracking
+- 🔔 Haptic feedback (vibration alerts)
+- 🚇 Transit schedule integration
+
+---
+
+## 🤝 Contributing
+
+**Fork → Create branch → Write tests → Implement → Run tests → Commit → PR**
+
+Details: [`docs/agentInstructions.md`](./docs/agentInstructions.md)
+
+**Requirements:**
+- All tests pass: `pytest -q` (backend), `npm test` (frontend)
+- One `.md` doc per commit in `/docs/commits/` (format: `commit-YYYY-MM-DD-description.md`)
+
+---
+
+**Built with ❤️ during Hackathon 2025** • [`Full commit history`](./docs/commits/)

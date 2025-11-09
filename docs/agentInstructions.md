@@ -66,7 +66,7 @@ EXACTLY ONE .md FILE PER COMMIT in /docs folder
 ✅ Naming format: commit-YYYY-MM-DD-short-description.md
 ✅ Example: commit-2024-11-07-added-transcribe-endpoint.md
 ❌ NEVER create multiple .md files in a single commit
-❌ NEVER create .md files outside /docs/ folder (except README.md)
+❌ NEVER create .md files outside /docs/commits folder (except README.md)
 
 Documentation File Template (in /docs):
 markdown# Commit: [Short Description]
