@@ -13,12 +13,19 @@ export const App = () => {
 
   return (
     <div className="app">
-      <header className="header">
-        <h1>🧭 NaviAcess</h1>
-        <p>Voice navigation for visually impaired users - powered by AI and real-time GPS guidance.</p>
-      </header>
-
-      <main className="main-content">
+    <header className="header">
+      <div className="header-content">
+        <div className="header-text">
+          <h1>NaviAcess</h1>
+          <p className="tagline">Voice-guided navigation for the visually impaired</p>
+          <p className="description">
+            <strong>Demo Version:</strong> This interface demonstrates AI-powered capabilities including real-time image analysis and voice synthesis via ElevenLabs. 
+            The production version for blind users would feature a drastically simplified interface with a single action button, minimal visual elements, and voice-first interaction. 
+            Future iterations will incorporate video analysis and be optimized as a mobile app for seamless smartphone navigation.
+          </p>
+        </div>
+      </div>
+    </header>      <main className="main-content">
         {displayError && <div className="alert alert-error">{displayError}</div>}
 
         <div className="container">
