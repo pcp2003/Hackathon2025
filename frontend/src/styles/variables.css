@@ -1,33 +1,38 @@
-/* Color Palette - Minimalist Nike-Style */
+/* Color Palette - Dark Mode Design */
 :root {
-  /* Primary Colors - Clean neutral palette */
-  --primary-color: #000000;
-  --primary-dark: #111111;
-  --primary-light: #f5f5f5;
+  /* Primary Colors - Modern gradient-ready palette */
+  --primary-color: #3b82f6;
+  --primary-dark: #1e40af;
+  --primary-light: #1e3a8a;
   
-  /* Accent Colors - Subtle accent */
-  --accent-color: #666666;
-  --accent-light: #e8e8e8;
+  /* Accent Colors - Vibrant accents */
+  --accent-color: #06b6d4;
+  --accent-light: #164e63;
   
-  /* Status Colors - Clean and simple */
-  --success-color: #4caf50;
-  --danger-color: #e74c3c;
-  --warning-color: #f39c12;
-  --info-color: #3498db;
+  /* Gradient Overlays */
+  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+  --gradient-secondary: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
   
-  /* Text Colors - Simple contrast */
-  --text-primary: #1a1a1a;
+  /* Status Colors - Enhanced and vibrant */
+  --success-color: #10b981;
+  --danger-color: #f87171;
+  --warning-color: #fb923c;
+  --info-color: #3b82f6;
+  
+  /* Text Colors - Better contrast for dark mode */
+  --text-primary: #f1f5f9;
   --text-secondary: #ffffff;
-  --text-light: #666666;
+  --text-light: #cbd5e1;
   
-  /* Background Colors - Light and clean */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f8f8;
-  --bg-white: #ffffff;
+  /* Background Colors - Dark theme */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-white: #1e293b;
   
-  /* Border Colors - Subtle */
-  --border-color: #e0e0e0;
-  --border-light: #f0f0f0;
+  /* Border Colors - Refined for dark theme */
+  --border-color: #334155;
+  --border-light: #1e293b;
   
   /* Typography - Optimized for screen readers and dyslexia-friendly fonts */
   --font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;

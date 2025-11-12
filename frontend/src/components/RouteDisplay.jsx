@@ -32,8 +32,9 @@ export const RouteDisplay = ({ route, isLoading, playStepGuidance, isPlayingAudi
                 className="play-step-button"
                 onClick={() => playStepGuidance(index, step.instruction)}
                 disabled={isPlayingAudio}
+                title="Play step guidance"
               >
-                ▶️ Play
+                Play
               </button>
             </div>
           </div>

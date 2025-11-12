@@ -183,3 +183,4 @@ cython_debug/
 .cursorindexingignore
 # Generated audio files
 backend/audio_output/
+.vscode/settings.json
