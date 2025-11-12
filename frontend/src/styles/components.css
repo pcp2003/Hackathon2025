@@ -938,12 +938,13 @@
 }
 
 .analysis-result {
-  background-color: white;
+  background-color: var(--bg-secondary);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   border-left: 4px solid var(--primary-color);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(0, 0, 0, 0.2);
   animation: slideIn 0.3s ease;
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 @keyframes slideIn {
@@ -966,7 +967,7 @@
 
 .analysis-result .description {
   margin: 0;
-  color: var(--text-color);
+  color: var(--text-light);
   line-height: 1.6;
   font-size: var(--font-size-base);
 }
