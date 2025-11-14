@@ -1,8 +1,8 @@
-# 🗣️ NaviAcess - Voice-Guided Navigation for the Visually Impaired
+# NaviAcess - Voice-Guided Navigation for the Visually Impaired
 
 **"Waze for Accessibility"** – An AI-powered voice navigation system that empowers visually impaired users to navigate urban environments independently through natural voice commands and real-time audio guidance.
 
-## 📋 Project Overview
+## Project Overview
 
 **NaviAcess** is a proof-of-concept built during Portugal biggest AI Hackathon that demonstrates how modern AI APIs can be combined to create an accessible navigation experience.
 
@@ -38,7 +38,7 @@ Users can also **capture images** to get audio descriptions of their surrounding
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Prerequisites
 - Docker & Docker Compose
@@ -64,7 +64,7 @@ That's it! Frontend at http://localhost:3000, API at http://localhost:8000
 
 ---
 
-## 🎯 How to Use
+## How to Use
 
 ### Step 1: Grant Location Permission
 Open the app and allow it to access your GPS location.
@@ -90,22 +90,22 @@ Click **"Analyze Image"** to get audio description of what your camera sees:
 
 ---
 
-## ✨ Core Features
+## Core Features
 
 | Feature | How It Works | Technology |
 |---------|-------------|-----------|
-| **🎤 Voice Input** | Speak destination in natural language | ElevenLabs STT |
-| **🧠 AI Recognition** | Extracts destination from conversational speech | OpenAI GPT-4o-mini |
-| **📍 Geolocation** | Tracks user position in real-time | HTML5 Geolocation API |
-| **🗺️ Smart Routing** | Calculates optimal pedestrian paths | OSRM + Nominatim |
-| **🔊 Voice Output** | Delivers turn-by-turn instructions as speech | ElevenLabs TTS (Rachel) |
-| **📸 Image Analysis** | Describes surroundings & detects hazards | GPT-4o-mini Vision |
-| **❌ Error Handling** | Specific, actionable audio error messages | Custom validation logic |
-| **📱 Accessibility** | Large buttons, touch-friendly, voice-first | React components |
+| ** Voice Input** | Speak destination in natural language | ElevenLabs STT |
+| ** AI Recognition** | Extracts destination from conversational speech | OpenAI GPT-4o-mini |
+| ** Geolocation** | Tracks user position in real-time | HTML5 Geolocation API |
+| ** Smart Routing** | Calculates optimal pedestrian paths | OSRM + Nominatim |
+| ** Voice Output** | Delivers turn-by-turn instructions as speech | ElevenLabs TTS (Rachel) |
+| ** Image Analysis** | Describes surroundings & detects hazards | GPT-4o-mini Vision |
+| ** Error Handling** | Specific, actionable audio error messages | Custom validation logic |
+| ** Accessibility** | Large buttons, touch-friendly, voice-first | React components |
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ### Data Flow Diagram
 
@@ -184,7 +184,7 @@ Frontend Plays Audio Error to User
 
 ---
 
-## 📊 Quality & Test Status
+## Quality & Test Status
 
 ✅ **48 Frontend Tests Passing**
 - 24 useNavigation tests (core routing logic)
@@ -217,7 +217,7 @@ Frontend Tests (48):
 
 ---
 
-## 🌐 API Endpoints Reference
+## API Endpoints Reference
 
 ### Core Navigation Pipeline
 
@@ -273,11 +273,11 @@ GET /api/health
 Output: { "status": "healthy", "timestamp": "..." }
 ```
 
-**📖 Interactive API Docs:** http://localhost:8000/docs (Swagger UI)
+** Interactive API Docs:** http://localhost:8000/docs (Swagger UI)
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 Hackathon2025/
@@ -358,7 +358,7 @@ Hackathon2025/
 
 ---
 
-## 🧪 Running Tests
+## Running Tests
 
 ```bash
 # Backend
@@ -370,7 +370,7 @@ cd frontend && npm test
 
 ---
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
@@ -404,7 +404,7 @@ cd frontend && npm test
 
 ---
 
-## 📋 Setup & Installation
+## Setup & Installation
 
 ### Local Development (Without Docker)
 
@@ -439,7 +439,7 @@ Don't commit to git (already in `.gitignore`).
 
 ---
 
-## �‍💻 Development Workflow
+## Development Workflow
 
 This project follows a **strict commit protocol** documented in [`docs/agentInstructions.md`](./docs/agentInstructions.md):
 
@@ -508,7 +508,7 @@ All 21+ commits are documented in `/docs/commits/`:
 
 ---
 
-## 🌟 Current Version Status
+## Current Version Status
 
 **This is a DEMO version** built during Hackathon 2025.
 
@@ -528,7 +528,7 @@ All 21+ commits are documented in `/docs/commits/`:
 
 ---
 
-## 📈 Known Limitations
+## Known Limitations
 
 - Max 50 km route distance (OSRM limitation)
 - English only (single voice configured)
@@ -538,29 +538,29 @@ All 21+ commits are documented in `/docs/commits/`:
 
 ---
 
-## 🎯 Roadmap & Future Work
+## Roadmap & Future Work
 
 ### Phase 2: Enhanced Navigation
-- ✨ Continuous video stream analysis (not single images)
-- 🌍 Multi-language support with different voices
-- 🔄 Advanced route deviation detection
-- � Offline mode with pre-downloaded maps
+- Continuous video stream analysis (not single images)
+- Multi-language support with different voices
+- Advanced route deviation detection
+- Offline mode with pre-downloaded maps
 
 ### Phase 3: Mobile & Accessibility
-- 📱 Native iOS app
-- 📱 Native Android app
-- 🎯 WCAG 2.1 accessibility compliance
-- 👁️ Real user testing with blind users
+- Native iOS app
+- Native Android app
+- WCAG 2.1 accessibility compliance
+- Real user testing with blind users
 
 ### Phase 4: Advanced Features
-- 🤖 AI-powered user feedback
-- 📊 Analytics and error tracking
-- 🔔 Haptic feedback (vibration alerts)
-- 🚇 Transit schedule integration
+- AI-powered user feedback
+- Analytics and error tracking
+- Haptic feedback (vibration alerts)
+- Transit schedule integration
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 **Fork → Create branch → Write tests → Implement → Run tests → Commit → PR**
 
