@@ -1,5 +1,7 @@
 # NaviAcess - Voice-Guided Navigation for the Visually Impaired
 
+![NaviAcess Landing Page](https://raw.githubusercontent.com/pcp2003/Hackathon2025/main/docs/landing-page.png)
+
 **"Waze for Accessibility"** – An AI-powered voice navigation system that empowers visually impaired users to navigate urban environments independently through natural voice commands and real-time audio guidance.
 
 ## Project Overview
