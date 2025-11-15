@@ -75,9 +75,8 @@ Open the app and allow it to access your GPS location.
 
 ### Step 2: Record Your Destination
 Click the **blue "Record" button** and speak naturally:
-- *"Take me to Central Library"*
-- *"Navigate to the train station"*
-- *"I want the shopping mall downtown"*
+- *"Take me to Carcavelos"*
+- *"Navigate to the Casa da Guia"*
 
 ### Step 3: Follow Audio Guidance
 Listen to step-by-step instructions:
